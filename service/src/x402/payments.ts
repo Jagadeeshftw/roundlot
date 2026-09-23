@@ -1,4 +1,5 @@
 import type { x402ResourceServer } from "@okxweb3/app-x402-express";
+import { recordSettlement } from "../activity.js";
 import type { Config } from "../config.js";
 import { createFacilitator, type SelectedFacilitator } from "./facilitator.js";
 import { createResourceServer } from "./resourceServer.js";
@@ -32,5 +33,16 @@ export async function setupPayments(cfg: Config): Promise<Payments> {
     console.error(`[payments] ${facilitator.kind} facilitator unavailable: ${reason}`);
     return { status: { state: "unavailable", facilitator: facilitator.kind, reason } };
   }
+  resourceServer.onAfterSettle(async ({ result, requirements, paymentPayload }) => {
+    if (!result.success) return;
+    const amount = Number(requirements.amount) / 10 ** cfg.payment.asset.decimals;
+    recordSettlement(cfg.payment, {
+      resource: paymentPayload.resource?.url ?? "unknown",
+      amount: `$${amount} ${cfg.payment.asset.symbol}`,
+      payer: result.payer ?? null,
+      transaction: result.transaction,
+      status: result.status ?? "success",
+    });
+  });
   return { status: { state: "ready", facilitator: facilitator.kind, settler: facilitator.settler }, resourceServer };
 }

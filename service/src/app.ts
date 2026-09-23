@@ -2,7 +2,10 @@ import express, { type NextFunction, type Request, type Response } from "express
 import { paymentMiddleware } from "@okxweb3/app-x402-express";
 import { buildCatalog } from "./catalog.js";
 import type { Config } from "./config.js";
+import { recentSettlements } from "./activity.js";
 import { cache } from "./data/cache.js";
+import { mainnet } from "./data/chain.js";
+import { getMarket } from "./data/okx.js";
 import { mcpHandler } from "./mcp/server.js";
 import { rateLimit } from "./rateLimit.js";
 import { resolveSymbol, XSTOCKS } from "./registry.js";
@@ -25,8 +28,17 @@ export async function createApp(cfg: Config) {
     res.json({ service: "Roundlot", catalog: "/v1/catalog", mcp: "/mcp", health: "/health" });
   });
 
-  app.get("/health", (_req, res) => {
-    res.json({ ok: true, paymentNetwork: cfg.payment.caip2, payments: payments.status, cache: cache.stats() });
+  // ?deep=1 also proves the upstreams are reachable from where we run
+  // (OKX market data and the X Layer mainnet RPC).
+  app.get("/health", async (req, res) => {
+    const base = { ok: true, paymentNetwork: cfg.payment.caip2, payments: payments.status, cache: cache.stats() };
+    if (req.query.deep !== "1") return res.json(base);
+    const [okx, rpc] = await Promise.allSettled([getMarket("XNVDA-USDT"), mainnet.getBlockNumber()]);
+    const upstreams = {
+      okx: okx.status === "fulfilled" ? { ok: true, host: okx.value.host, at: okx.value.ts } : { ok: false, error: String(okx.reason) },
+      mainnetRpc: rpc.status === "fulfilled" ? { ok: true, blockNumber: rpc.value.toString() } : { ok: false, error: String(rpc.reason) },
+    };
+    res.status(upstreams.okx.ok && upstreams.mainnetRpc.ok ? 200 : 503).json({ ...base, ok: upstreams.okx.ok && upstreams.mainnetRpc.ok, upstreams });
   });
 
   // The landing page calls the API from the browser; x402 headers must be
@@ -45,6 +57,10 @@ export async function createApp(cfg: Config) {
   });
 
   app.use(["/v1", "/mcp"], rateLimit({ windowMs: 60_000, max: 60 }));
+
+  app.get("/v1/activity", (_req, res) => {
+    res.json({ network: cfg.payment.caip2, settlements: recentSettlements() });
+  });
 
   const tryIt = cfg.TRY_IT_ENABLED && payments.resourceServer ? tryItHandler(cfg) : undefined;
   app.post("/v1/try", (req, res) => {

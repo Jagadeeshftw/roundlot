@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:live": "LIVE=1 vitest run test/quote.live.test.ts",
-    "test:fork": "FORK=1 vitest run test/planTrade.fork.test.ts"
+    "test:fork": "FORK=1 vitest run test/planTrade.fork.test.ts",
+    "demo": "tsx --env-file-if-exists=../.env scripts/demo-agent.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

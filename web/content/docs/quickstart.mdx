@@ -10,7 +10,7 @@ order: 2
 Add Roundlot as a streamable HTTP server:
 
 ```json
-{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api-production-86c9.up.railway.app/mcp" } } }
+{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api.roundlot.0xo.in/mcp" } } }
 ```
 
 `tools/list` returns `catalog`, `session`, `quote` and `plan_trade`. Only the last three cost anything.
@@ -18,8 +18,8 @@ Add Roundlot as a streamable HTTP server:
 ## Read the catalog (free)
 
 ```bash
-curl -X POST https://api-production-86c9.up.railway.app/v1/catalog
-curl "https://api-production-86c9.up.railway.app/v1/catalog?symbol=NVDA"
+curl -X POST https://api.roundlot.0xo.in/v1/catalog
+curl "https://api.roundlot.0xo.in/v1/catalog?symbol=NVDA"
 ```
 
 ## Get testnet USD₮0
@@ -32,7 +32,7 @@ The repository's demo agent connects over MCP and pays for `session`, `quote` an
 
 ```bash
 git clone https://github.com/Jagadeeshftw/roundlot && cd roundlot && npm ci
-DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api-production-86c9.up.railway.app npm run demo -w service
+DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api.roundlot.0xo.in npm run demo -w service
 ```
 
 Each paid call prints its settlement transaction on the X Layer testnet explorer. To build your own client, see [x402 over MCP](/docs/paying-mcp) or [x402 over REST](/docs/paying-rest).

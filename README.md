@@ -6,7 +6,7 @@ Roundlot is an MCP server (streamable HTTP) and a REST API with the same tools. 
 
 Built for OKX Dev Day 2026 (Build a Company track, remote), 17–25 September 2026.
 
-- **API:** https://api-production-86c9.up.railway.app (catalog: [`/v1/catalog`](https://api-production-86c9.up.railway.app/v1/catalog), MCP: `/mcp`)
+- **API:** https://api.roundlot.0xo.in (catalog: [`/v1/catalog`](https://api.roundlot.0xo.in/v1/catalog), MCP: `/mcp`)
 - **OKX.AI:** A2MCP service provider listing in progress (the link goes here once it is live)
 
 ## Tools
@@ -49,16 +49,16 @@ MCP clients that can't sign (for example Claude Desktop) get a readable "payment
 
 ```bash
 # Free
-curl -s https://api-production-86c9.up.railway.app/v1/catalog | jq
+curl -s https://api.roundlot.0xo.in/v1/catalog | jq
 
 # Paid, from a funded testnet key: pays session over REST and over MCP
-cd service && DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api-production-86c9.up.railway.app npx tsx scripts/spike.ts
+cd service && DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api.roundlot.0xo.in npx tsx scripts/spike.ts
 ```
 
 MCP client config (streamable HTTP):
 
 ```json
-{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api-production-86c9.up.railway.app/mcp" } } }
+{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api.roundlot.0xo.in/mcp" } } }
 ```
 
 ## How the numbers are made

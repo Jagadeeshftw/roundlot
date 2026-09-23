@@ -1,6 +1,6 @@
 // A minimal paying agent: connects to Roundlot over MCP, reads the free
 // catalog, then pays per call for session, quote and plan_trade.
-// Usage: BASE_URL=https://api-production-86c9.up.railway.app npx tsx --env-file=../.env scripts/demo-agent.ts
+// Usage: BASE_URL=https://api.roundlot.0xo.in npx tsx --env-file=../.env scripts/demo-agent.ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";

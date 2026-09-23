@@ -6,6 +6,7 @@ import { cache } from "./data/cache.js";
 import { mcpHandler } from "./mcp/server.js";
 import { rateLimit } from "./rateLimit.js";
 import { resolveSymbol, XSTOCKS } from "./registry.js";
+import { tryItHandler } from "./tryIt.js";
 import { ToolError } from "./tools/common.js";
 import { PAID_TOOLS } from "./tools/index.js";
 import { setupPayments } from "./x402/payments.js";
@@ -28,7 +29,28 @@ export async function createApp(cfg: Config) {
     res.json({ ok: true, paymentNetwork: cfg.payment.caip2, payments: payments.status, cache: cache.stats() });
   });
 
+  // The landing page calls the API from the browser; x402 headers must be
+  // readable cross-origin.
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && cfg.CORS_ORIGINS.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, PAYMENT-SIGNATURE, Mcp-Session-Id, Mcp-Protocol-Version");
+      res.setHeader("Access-Control-Expose-Headers", "PAYMENT-REQUIRED, PAYMENT-RESPONSE, RateLimit-Remaining, Retry-After");
+    }
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+    next();
+  });
+
   app.use(["/v1", "/mcp"], rateLimit({ windowMs: 60_000, max: 60 }));
+
+  const tryIt = cfg.TRY_IT_ENABLED && payments.resourceServer ? tryItHandler(cfg) : undefined;
+  app.post("/v1/try", (req, res) => {
+    if (!tryIt) return res.status(404).json({ error: "try_it_disabled" });
+    return tryIt(req, res);
+  });
 
   // OKX.AI's marketplace calls listed endpoints as plain REST (POST {} by
   // default), so the free catalog answers both GET and POST.

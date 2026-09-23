@@ -22,12 +22,27 @@ const Env = z
     RELAYER_PRIVATE_KEY: hexKey.optional(),
     // Overrides the payment network RPC (e.g. a local fork for tests).
     PAYMENT_RPC_URL: z.string().url().optional(),
+    // Landing-page "Try it": the demo wallet pays for one quote per click.
+    TRY_IT_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
+    DEMO_BUYER_PRIVATE_KEY: hexKey.optional(),
+    TRY_IT_DAILY_CAP: z.coerce.number().int().min(0).default(200),
+    // Browser origins allowed to call the API (the landing page).
+    CORS_ORIGINS: z
+      .string()
+      .default("https://roundlot.0xo.in,http://localhost:3001")
+      .transform((v) => v.split(",").map((o) => o.trim()).filter(Boolean)),
   })
   .superRefine((env, ctx) => {
     if (env.FACILITATOR === "okx") {
       for (const k of ["OKX_API_KEY", "OKX_SECRET_KEY", "OKX_PASSPHRASE"] as const) {
         if (!env[k]) ctx.addIssue({ code: "custom", path: [k], message: "required when FACILITATOR=okx" });
       }
+    }
+    if (env.TRY_IT_ENABLED && !env.DEMO_BUYER_PRIVATE_KEY) {
+      ctx.addIssue({ code: "custom", path: ["DEMO_BUYER_PRIVATE_KEY"], message: "required when TRY_IT_ENABLED=true" });
     }
     if (env.FACILITATOR === "local" && !env.RELAYER_PRIVATE_KEY) {
       ctx.addIssue({ code: "custom", path: ["RELAYER_PRIVATE_KEY"], message: "required when FACILITATOR=local" });

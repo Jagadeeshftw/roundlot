@@ -7,6 +7,8 @@ import { Badge } from "./badge";
 import { Button } from "./button";
 import { DivideX } from "./divide";
 import { faqs } from "@/constants/faqs";
+import config from "@/config";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import useMeasure from "react-use-measure";
 
@@ -50,25 +52,17 @@ export const FAQs = () => {
   return (
     <Container className="border-divide flex flex-col items-center border-x pt-12">
       <Badge text="FAQs" />
-      <SectionHeading className="mt-4">
-        Frequently Asked Questions
-      </SectionHeading>
+      <SectionHeading className="mt-4">Questions</SectionHeading>
 
-      <SubHeading as="p" className="mx-auto mt-6 max-w-lg px-2">
-        Find all your doubts and questions in one place. Still couldn't find
-        what you're looking for?
+      <SubHeading as="p" className="text-muted mx-auto mt-6 max-w-lg px-2">
+        The short answers. The docs and the README have the long ones.
       </SubHeading>
       <div className="mt-8 mb-12 flex w-full flex-col justify-center gap-4 px-4 sm:flex-row">
-        <Button variant="primary" className="w-full sm:w-auto">
-          Read Docs
+        <Button as={Link} href="/docs" variant="primary" className="w-full sm:w-auto">
+          Read the docs
         </Button>
-        <Button
-          as="a"
-          href="mailto:support@example.com"
-          variant="secondary"
-          className="w-full sm:w-auto"
-        >
-          Contact Us
+        <Button as="a" href={config.repoUrl} variant="secondary" className="w-full sm:w-auto">
+          View on GitHub
         </Button>
       </div>
       <DivideX />
@@ -145,7 +139,7 @@ const AccordionItem = ({
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -6, opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                className="text-gray-600 dark:text-neutral-400"
+                className="text-muted"
               >
                 {answer}
               </motion.p>

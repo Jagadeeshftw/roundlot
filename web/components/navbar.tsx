@@ -13,24 +13,13 @@ import {
   useTransform,
 } from "motion/react";
 import { ModeToggle } from "./mode-toggle";
+import config from "@/config";
 
 const items = [
-  {
-    title: "Pricing",
-    href: "/pricing",
-  },
-  {
-    title: "About",
-    href: "/about",
-  },
-  {
-    title: "Careers",
-    href: "/careers",
-  },
-  {
-    title: "Blog",
-    href: "/blog",
-  },
+  { title: "Tools", href: "/#tools" },
+  { title: "How it works", href: "/#how" },
+  { title: "Docs", href: "/docs" },
+  { title: "GitHub", href: config.repoUrl },
 ];
 
 export const Navbar = () => {
@@ -102,10 +91,10 @@ const MobileNav = ({ items }: { items: { title: string; href: string }[] }) => {
                 <Button
                   onClick={() => setIsOpen(false)}
                   as={Link}
-                  href="/sign-up"
+                  href="/docs/quickstart"
                   className="w-full"
                 >
-                  Start building
+                  Connect over MCP
                 </Button>
               </div>
             </div>
@@ -137,8 +126,8 @@ const DesktopNav = ({
       </div>
       <div className="flex items-center gap-2">
         <ModeToggle />
-        <Button as={Link} href="/sign-up">
-          Start building
+        <Button as={Link} href="/docs/quickstart">
+          Connect over MCP
         </Button>
       </div>
     </div>
@@ -178,8 +167,8 @@ const FloatingNav = ({
       </div>
       <div className="flex items-center gap-2">
         <ModeToggle />
-        <Button as={Link} href="/sign-up">
-          Start building
+        <Button as={Link} href="/docs/quickstart">
+          Connect over MCP
         </Button>
       </div>
     </motion.div>

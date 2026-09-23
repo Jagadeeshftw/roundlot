@@ -1,32 +1,27 @@
 export const faqs = [
   {
-    question: "What exactly does this platform do?",
+    question: "Do I need an OKX account?",
     answer:
-      "Our platform lets you design, deploy, and manage AI-powered agentic workflows that can combine both automated (AI) and manual steps. These workflows connect to your existing tools (like Slack, Notion, or Google Sheets) and use AI agents to complete tasks.",
+      "No. Any wallet that can sign an EIP-3009 authorization can pay. Testnet USD₮0 comes from the X Layer faucet.",
   },
   {
-    question: "How do I get started with creating my first workflow?",
+    question: "Why are payments on testnet?",
     answer:
-      "Start by using our drag-and-drop interface to design your workflow. Connect the tools you already use, define the steps (both AI and manual), and test everything in our sandbox environment before deploying. No coding required.",
+      "So anyone can try every tool without spending real money. The data and the trade plans are real X Layer mainnet; mainnet payments are configured and switched off.",
   },
   {
-    question: "What tools and services can I integrate?",
+    question: "Does Roundlot hold keys or funds?",
     answer:
-      "We support hundreds of integrations including Slack, Notion, Google Workspace, Salesforce, GitHub, Zapier, and many more. You can also connect custom APIs and databases through our flexible connector system.",
+      "No. plan_trade returns unsigned transactions for your account to sign and send. The only thing Roundlot receives is the per-call payment.",
   },
   {
-    question: "Is my data secure when using AI agents?",
+    question: "What if a call fails?",
     answer:
-      "Yes, we take security seriously. All data is encrypted in transit and at rest, we're SOC 2 compliant, and you maintain full control over what data your agents can access. Agents only interact with the specific tools and data you explicitly authorize.",
+      "Payment settles only after the tool succeeds. A refused quote or plan, such as a size the pool can't fill, is never charged.",
   },
   {
-    question: "Can I test workflows before they go live?",
+    question: "Which MCP clients can pay?",
     answer:
-      "Absolutely. Our sandbox environment lets you preview and debug workflow logic safely before deployment. You can test different scenarios, validate agent behavior, and ensure everything works as expected without affecting your live systems.",
-  },
-  {
-    question: "What's the difference between automated and manual steps?",
-    answer:
-      "Automated steps are handled entirely by AI agents (like data analysis, content generation, or API calls), while manual steps require human input or approval. You can mix both types to create workflows that leverage AI efficiency while maintaining human oversight where needed.",
+      "Any client that speaks the @x402/mcp convention: it reads the payment requirements from the tool result and retries with the signed payload in _meta. Clients that can't sign get a readable price and the REST alternative.",
   },
 ];

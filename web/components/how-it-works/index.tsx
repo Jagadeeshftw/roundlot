@@ -7,11 +7,7 @@ import { SectionHeading } from "../seciton-heading";
 import { PixelatedCanvas } from "../pixelated-canvas";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
-import {
-  ConnectYourTooklsSkeleton,
-  DeployAndScaleSkeleton,
-  DesignYourWorkflowSkeleton,
-} from "./skeletons";
+import { SequencePanel } from "./sequence";
 
 type Tab = {
   title: string;
@@ -23,28 +19,36 @@ type Tab = {
 export const HowItWorks = () => {
   const tabs = [
     {
-      title: "Design your Workflow",
+      title: "Call a tool",
       description:
-        "A drag-and-drop interface to create, connect, and configure agents into logical workflows",
+        "Your agent calls quote over MCP or REST. catalog is free; initialize and tools/list never ask for payment.",
       icon: FirstIcon,
-      id: "workflow",
-      skeleton: <DesignYourWorkflowSkeleton />,
+      id: "call",
+      step: 0,
     },
     {
-      title: "Connect your Tools",
+      title: "Get the price",
       description:
-        "Agents operate independently and coordinate tasks to complete all complex goals together",
+        "An unpaid call returns x402 payment requirements: the amount, USD₮0 on X Layer testnet, and where to pay.",
       icon: SecondIcon,
-      id: "tools",
-      skeleton: <ConnectYourTooklsSkeleton />,
+      id: "price",
+      step: 1,
     },
     {
-      title: "Deploy & Scale",
+      title: "Sign, not send",
       description:
-        "Run agent workflows in a sandbox to preview behavior, debug logic, and test interactions",
+        "The agent signs an EIP-3009 authorization from any wallet. No OKX account, no gas.",
       icon: ThirdIcon,
-      id: "deploy",
-      skeleton: <DeployAndScaleSkeleton />,
+      id: "sign",
+      step: 2,
+    },
+    {
+      title: "Settle and receive",
+      description:
+        "The facilitator verifies and settles on-chain. The result arrives with the receipt.",
+      icon: FourthIcon,
+      id: "settle",
+      step: 3,
     },
   ];
 
@@ -62,14 +66,14 @@ export const HowItWorks = () => {
     return () => clearInterval(interval);
   }, [activeTab]);
   return (
-    <Container className="border-divide border-x">
+    <Container id="how" className="border-divide scroll-mt-20 border-x">
       <div className="flex flex-col items-center pt-16">
         <Badge text="How it works" />
-        <SectionHeading className="mt-4">Integrates easily</SectionHeading>
+        <SectionHeading className="mt-4">Priced per call, paid in the call</SectionHeading>
 
-        <SubHeading as="p" className="mx-auto mt-6 max-w-lg">
-          We empower developers and technical teams to create, simulate, and
-          manage AI-driven workflows visually
+        <SubHeading as="p" className="text-muted mx-auto mt-6 max-w-lg px-4">
+          x402 turns a tool call into a purchase. The agent signs, the
+          facilitator settles, the result comes back with a receipt.
         </SubHeading>
         {/* Desktop Tabs */}
         <div className="border-divide divide-divide mt-16 hidden w-full grid-cols-2 divide-x border-t lg:grid">
@@ -103,7 +107,7 @@ export const HowItWorks = () => {
               </button>
             ))}
           </div>
-          <div className="relative h-full max-h-[370px] overflow-hidden bg-[radial-gradient(var(--color-dots)_1px,transparent_1px)] mask-r-from-90% mask-l-from-90% mask-radial-from-20% [background-size:10px_10px]">
+          <div className="relative h-full min-h-[440px] overflow-hidden bg-[radial-gradient(var(--color-dots)_1px,transparent_1px)] [background-size:10px_10px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab.id}
@@ -113,12 +117,12 @@ export const HowItWorks = () => {
                 exit={{ filter: "blur(10px)", opacity: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                {activeTab.skeleton}
+                <SequencePanel activeStep={activeTab.step} />
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
-        {/* Mobile Tabs */}
+        {/* Mobile: the steps, then the full sequence */}
         <div className="divide-divide border-divide mt-16 flex w-full flex-col divide-y overflow-hidden border-t lg:hidden">
           {tabs.map((tab, index) => (
             <div
@@ -131,11 +135,12 @@ export const HowItWorks = () => {
               <p className="relative z-20 mt-2 text-left text-sm text-gray-600 dark:text-neutral-300">
                 {tab.description}
               </p>
-              <div className="relative mx-auto h-80 w-full overflow-hidden mask-t-from-90% mask-r-from-90% mask-b-from-90% mask-l-from-90% sm:h-80 sm:w-160">
-                {tab.skeleton}
-              </div>
+
             </div>
           ))}
+          <div className="bg-[radial-gradient(var(--color-dots)_1px,transparent_1px)] [background-size:10px_10px]">
+            <SequencePanel activeStep={3} />
+          </div>
         </div>
       </div>
     </Container>
@@ -298,6 +303,15 @@ export const ThirdIcon = (props: React.SVGProps<SVGSVGElement>) => {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+};
+
+export const FourthIcon = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M3.333 2h9.334v12l-2-1.333L8.667 14l-2-1.333L4.667 14l-1.334-1.333V2z" stroke="currentColor" strokeWidth="1.333" strokeLinejoin="round" />
+      <path d="M5.667 7.333l1.5 1.5 3.166-3.166" stroke="currentColor" strokeWidth="1.333" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };

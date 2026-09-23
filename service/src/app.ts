@@ -3,6 +3,7 @@ import { paymentMiddleware } from "@okxweb3/app-x402-express";
 import { buildCatalog } from "./catalog.js";
 import type { Config } from "./config.js";
 import { mcpHandler } from "./mcp/server.js";
+import { resolveSymbol, XSTOCKS } from "./registry.js";
 import { setupPayments } from "./x402/payments.js";
 import { acceptsFor, TOOL_PRICES } from "./x402/resourceServer.js";
 
@@ -21,7 +22,19 @@ export async function createApp(cfg: Config) {
 
   // OKX.AI's marketplace calls listed endpoints as plain REST (POST {} by
   // default), so the free catalog answers both GET and POST.
-  app.route("/v1/catalog").get((_req, res) => res.json(catalog())).post((_req, res) => res.json(catalog()));
+  const catalogRoute = (symbol: unknown, res: express.Response) => {
+    if (symbol === undefined || symbol === "") return res.json(catalog());
+    const x = typeof symbol === "string" ? resolveSymbol(symbol) : undefined;
+    if (!x) {
+      return res.status(400).json({ error: "unknown_symbol", supported: Object.keys(XSTOCKS) });
+    }
+    const full = catalog();
+    return res.json({ ...full, symbols: full.symbols.filter((s) => s.symbol === x.symbol) });
+  };
+  app
+    .route("/v1/catalog")
+    .get((req, res) => catalogRoute(req.query.symbol, res))
+    .post((req, res) => catalogRoute(req.body?.symbol, res));
 
   if (payments.resourceServer) {
     app.use(

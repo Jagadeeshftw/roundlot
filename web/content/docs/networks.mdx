@@ -1,0 +1,20 @@
+---
+title: "Networks"
+description: "Data from X Layer mainnet, payments on X Layer testnet: why, and what each response tells you."
+group: "Paying"
+order: 3
+---
+
+| What | Network | Details |
+|---|---|---|
+| Market data, token state, pool state, trade calldata | X Layer mainnet `eip155:196` | Uniswap v3, QuoterV2, SwapRouter02 |
+| x402 payments | X Layer testnet `eip155:1952` | USD₮0 `0x9e29…fb0c`, 6 decimals |
+| Reference prices | OKX spot | `XNVDA-USDT`, `XSPY-USDT`, `XTSLA-USDT` |
+
+## Why the split
+
+Real xStocks and real liquidity only exist on mainnet, so every read and every generated transaction points there. Payments settle on testnet so anyone can try the service with faucet funds. Mainnet payments (USD₮0 `0x779d…3736`) are configured and switched off.
+
+## How to tell
+
+Every paid response includes `data.network: "eip155:196"`; every receipt names `eip155:1952`. The [catalog](/docs/catalog) lists both, plus which facilitator settles payments.

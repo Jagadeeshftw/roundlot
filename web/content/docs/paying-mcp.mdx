@@ -1,0 +1,28 @@
+---
+title: "x402 over MCP"
+description: "Payment happens per tool call inside MCP, using the same _meta convention as @x402/mcp."
+group: "Paying"
+order: 2
+---
+
+MCP over streamable HTTP is JSON-RPC on one endpoint, so an HTTP `402` can't price individual tools. Roundlot prices each tool call instead. `initialize`, `tools/list` and `catalog` never ask for payment.
+
+## The round trip
+
+1. Call a paid tool. The result has `isError: true` and carries the x402 `PaymentRequired` object in `structuredContent` and JSON-encoded in `content[0].text`.
+2. Sign the payment exactly as for REST.
+3. Call the same tool again with the payload in `_meta["x402/payment"]`.
+4. The result arrives with the settlement receipt in `_meta["x402/payment-response"]`.
+
+```json
+{ "method": "tools/call",
+  "params": { "name": "quote",
+    "arguments": { "symbol": "NVDA", "side": "buy", "size": "100" },
+    "_meta": { "x402/payment": { "x402Version": 2, "payload": { "...": "signed authorization" } } } } }
+```
+
+## Compatibility
+
+This is the wire format of Coinbase's `@x402/mcp`, so its `createx402MCPClient` can pay Roundlot. The server side is implemented on OKX's `@okxweb3/app-x402-core` rather than with `@x402/mcp` itself: that library is built on a different x402 core and calls resource-server methods OKX's core doesn't have.
+
+Clients that can't sign, such as Claude Desktop, see a second text block with the price and the REST alternative.

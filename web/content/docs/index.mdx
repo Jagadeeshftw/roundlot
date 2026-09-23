@@ -1,0 +1,29 @@
+---
+title: "Overview"
+description: "Roundlot sells market data and trade plans for tokenized US equities on X Layer, one paid call at a time."
+group: "Start"
+order: 1
+---
+
+Roundlot is an MCP server and a REST API with the same four tools. Agents use it to price and plan trades in **NVDA, SPY and TSLA xStocks**, the tokenized equities on X Layer, without running their own indexing.
+
+| Tool | Price | Returns |
+|---|---|---|
+| [`catalog`](/docs/catalog) | free | Supported symbols, addresses, venues, prices, networks |
+| [`session`](/docs/session) | $0.005 | US market session and what it means for the token's price |
+| [`quote`](/docs/quote) | $0.01 | The fill for a buy or sell against live Uniswap v3 liquidity |
+| [`plan_trade`](/docs/plan-trade) | $0.02 | Ordered, unsigned transactions to execute the trade |
+
+## Endpoints
+
+- MCP (streamable HTTP, stateless): `https://api-production-86c9.up.railway.app/mcp`
+- REST: `https://api-production-86c9.up.railway.app/v1/<tool>`, GET with query parameters or POST with a JSON body
+- Health: `https://api-production-86c9.up.railway.app/health`
+
+## Two networks
+
+Data, token metadata, pool state and trade calldata come from **X Layer mainnet** (`eip155:196`). Payments settle on **X Layer testnet** (`eip155:1952`) in USD₮0, so anyone can try every tool with faucet funds. See [Networks](/docs/networks).
+
+## What Roundlot never does
+
+It never holds keys or funds, never signs or sends a trade, and never charges for a call it refuses.

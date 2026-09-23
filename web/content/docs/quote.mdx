@@ -1,0 +1,38 @@
+---
+title: "quote"
+description: "The fill for a buy or sell against the live Uniswap v3 pool, compared with the OKX spot book."
+group: "Tools"
+order: 3
+price: "$0.01 per call"
+---
+
+## Parameters
+
+| Name | Type | Meaning |
+|---|---|---|
+| `symbol` | string | NVDA, SPY or TSLA |
+| `side` | `buy` or `sell` | buy pays stablecoin for the xStock; sell is the reverse |
+| `size` | decimal | Trade size in the unit given by `sizeUnit` |
+| `sizeUnit` | `usd` or `shares` | Default `usd`. Shares are xStock tokens, one per underlying share |
+
+## How it prices
+
+Quotes come from Uniswap's QuoterV2 on X Layer mainnet against the wrapped token's pool (wNVDAx/USDG, wSPYx/USDG, wTSLAx/USDC). Pool prices are per wrapped token, so they are divided by the ERC-4626 rate to give a per-share price comparable with OKX. A size that would run the pool out of in-range liquidity is refused with `insufficient_liquidity` and not charged.
+
+## Response (trimmed)
+
+```json
+{
+  "symbol": "NVDA", "side": "buy", "size": { "amount": "1000", "unit": "usd" },
+  "fill": {
+    "venue": "Uniswap v3", "feeBps": 5,
+    "pay": { "token": "USDG", "amount": "1000" },
+    "receive": { "token": "wNVDAx", "amount": "4.359824321933540634", "shares": 4.36724124 },
+    "avgPricePerShare": 228.9775, "poolMidPerShare": 228.8497, "priceImpactBps": 5.6
+  },
+  "reference": { "venue": "OKX spot", "instId": "XNVDA-USDT", "onchainEdgeBps": 3.6 },
+  "data": { "network": "eip155:196" }
+}
+```
+
+`onchainEdgeBps` is positive when the on-chain fill beats crossing the OKX book.

@@ -1,0 +1,40 @@
+---
+title: "plan_trade"
+description: "Ordered, unsigned X Layer mainnet transactions to execute a buy or sell. Your account signs and sends them."
+group: "Tools"
+order: 4
+price: "$0.02 per call"
+---
+
+## Parameters
+
+Everything [`quote`](/docs/quote) takes, plus:
+
+| Name | Type | Meaning |
+|---|---|---|
+| `account` | address | The account that will sign the transactions and receive the output |
+| `maxSlippageBps` | integer 1–1000 | Default 50. Sets `amountOutMinimum` or `amountInMaximum` |
+| `tokenForm` | `raw` or `wrapped` | Default `raw`: the account holds or wants the xStock itself, which adds wrap or unwrap steps |
+| `deadlineSeconds` | integer 60–3600 | Default 600 |
+
+## The steps
+
+Depending on side and token form, the plan is some of: **approve** → **wrap** (ERC-4626 deposit) → **swap** (SwapRouter02, wrapped in `multicall(deadline, …)`) → **unwrap** (redeem). Approvals the account already has are skipped, and a warning appears if its balance is too low.
+
+Plans are refused while an issuer multiplier change falls inside the deadline window.
+
+## Response (trimmed)
+
+```json
+{
+  "chainId": 196, "account": "0x…", "symbol": "NVDA", "side": "buy", "tokenForm": "raw",
+  "steps": [
+    { "index": 1, "kind": "approve", "to": "0x4ae4…2dc8", "data": "0x095ea7b3…", "value": "0", "description": "Approve SwapRouter02 to spend USDG" },
+    { "index": 2, "kind": "swap", "to": "0x4f0c…9bca", "data": "0x5ae401dc…", "value": "0", "description": "Swap 250 USDG for at least 1.1051 wNVDAx" },
+    { "index": 3, "kind": "unwrap", "to": "0xa8dd…50d5", "data": "0xba087652…", "value": "0", "description": "Unwrap 1.1051 wNVDAx into 1.1070 NVDAx" }
+  ],
+  "limits": { "amountIn": "250", "amountOutMinimum": "1.1051", "maxSlippageBps": 50, "deadline": "2026-09-23T17:10:00.000Z" }
+}
+```
+
+Every plan shape (raw and wrapped, USD and share sizes, NVDA, SPY and TSLA) is executed on an anvil fork of X Layer mainnet in the repository's tests.

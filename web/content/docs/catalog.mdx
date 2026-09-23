@@ -1,0 +1,39 @@
+---
+title: "catalog"
+description: "Supported symbols, token and wrapper addresses, venues, tool prices and networks."
+group: "Tools"
+order: 1
+price: "Free"
+---
+
+## Parameters
+
+| Name | Type | Meaning |
+|---|---|---|
+| `symbol` | string, optional | Return one symbol: NVDA, SPY or TSLA (NVDAx and wNVDAx forms accepted). Default: all |
+
+## Request
+
+```bash
+curl -X POST https://api-production-86c9.up.railway.app/v1/catalog -H 'Content-Type: application/json' -d '{"symbol":"NVDA"}'
+```
+
+## Response (trimmed)
+
+```json
+{
+  "service": "Roundlot",
+  "networks": {
+    "data": { "network": "eip155:196", "name": "X Layer mainnet" },
+    "payment": { "network": "eip155:1952", "asset": { "symbol": "USD₮0", "decimals": 6 }, "facilitator": "okx" }
+  },
+  "symbols": [{
+    "symbol": "NVDA",
+    "token": { "symbol": "NVDAx", "address": "0xc845b2894dbddd03858fd2d643b4ef725fe0849d", "decimals": 18 },
+    "wrapped": { "symbol": "wNVDAx", "address": "0xa8ddb5cd96b5222afe198316e9a57caa642850d5", "decimals": 18 },
+    "venue": { "dex": "Uniswap v3", "quote": "USDG", "feeBps": 5 },
+    "reference": { "venue": "OKX spot", "instId": "XNVDA-USDT" }
+  }],
+  "tools": [{ "name": "quote", "price": "$0.01", "rest": "/v1/quote" }]
+}
+```

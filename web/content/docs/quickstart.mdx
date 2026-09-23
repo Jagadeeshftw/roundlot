@@ -1,0 +1,38 @@
+---
+title: "Quickstart"
+description: "Connect an MCP client, read the free catalog, then pay for your first tool call."
+group: "Start"
+order: 2
+---
+
+## Connect an MCP client
+
+Add Roundlot as a streamable HTTP server:
+
+```json
+{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api-production-86c9.up.railway.app/mcp" } } }
+```
+
+`tools/list` returns `catalog`, `session`, `quote` and `plan_trade`. Only the last three cost anything.
+
+## Read the catalog (free)
+
+```bash
+curl -X POST https://api-production-86c9.up.railway.app/v1/catalog
+curl "https://api-production-86c9.up.railway.app/v1/catalog?symbol=NVDA"
+```
+
+## Get testnet USD₮0
+
+Open the [X Layer faucet](https://web3.okx.com/xlayer/faucet/xlayerfaucet), paste your wallet address and claim USDT. The faucet's USDT is USD₮0 at `0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c` (6 decimals). You don't need OKB: the facilitator pays the gas.
+
+## Pay for a call
+
+The repository's demo agent connects over MCP and pays for `session`, `quote` and `plan_trade` from a private key:
+
+```bash
+git clone https://github.com/Jagadeeshftw/roundlot && cd roundlot && npm ci
+DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api-production-86c9.up.railway.app npm run demo -w service
+```
+
+Each paid call prints its settlement transaction on the X Layer testnet explorer. To build your own client, see [x402 over MCP](/docs/paying-mcp) or [x402 over REST](/docs/paying-rest).

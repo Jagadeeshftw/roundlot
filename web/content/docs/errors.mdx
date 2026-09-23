@@ -1,0 +1,25 @@
+---
+title: "Errors and limits"
+description: "Error codes, when you're charged, and rate limits."
+group: "Reference"
+order: 1
+---
+
+## Errors
+
+| Code | HTTP | Charged | Meaning |
+|---|---|---|---|
+| `invalid_input` | 400 | no | A parameter is missing or malformed; payment is not requested |
+| `unknown_symbol` | 400 | no | Supported: NVDA, SPY, TSLA |
+| `insufficient_liquidity` | 422 | no | The pool can't fill this size |
+| `token_paused` | 422 | no | The issuer has paused transfers |
+| `multiplier_change_pending` | 422 | no | plan_trade only: a multiplier change falls inside the deadline |
+| `payments_unavailable` | 503 | no | The facilitator is unreachable; free tools still work |
+| `rate_limited` | 429 | no | Too many requests from your IP |
+
+Over MCP the same codes arrive as `isError` results. Settlement only happens after a successful result.
+
+## Limits
+
+- 60 requests per minute per IP across `/v1` and `/mcp`.
+- Market data is cached for about 2 seconds and token state for 30 seconds, so repeated calls within that window see the same numbers.

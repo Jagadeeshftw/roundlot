@@ -1,0 +1,35 @@
+---
+title: "session"
+description: "Is the US market open, what that means for the token's price, and is the token tradable on-chain."
+group: "Tools"
+order: 2
+price: "$0.005 per call"
+---
+
+xStocks trade around the clock on OKX, but outside US regular hours their price is the last close plus a market estimate. `session` tells you which regime a price belongs to.
+
+## Parameters
+
+| Name | Type | Meaning |
+|---|---|---|
+| `symbol` | string | NVDA, SPY or TSLA |
+
+## What it checks
+
+- **US equity session**: regular, pre-market (04:00–09:30 ET), after-hours (16:00–20:00 ET) or closed, with NYSE holidays and early closes for 2026–2027, and the next open and close.
+- **OKX**: the instrument's state (`live`, `suspend`, `rebase`) and pricing regime.
+- **Token**: whether the issuer has paused transfers, the current multiplier, and any scheduled multiplier change.
+- **On-chain**: whether the Uniswap v3 pool has in-range liquidity.
+
+## Response (trimmed)
+
+```json
+{
+  "symbol": "SPY",
+  "usEquityMarket": { "phase": "pre_market", "nextOpen": "2026-09-23T13:30:00.000Z", "earlyClose": false },
+  "okx": { "instId": "XSPY-USDT", "state": "live", "pricing": "last close plus market estimate" },
+  "token": { "paused": false, "multiplier": 1.005714560286254, "pendingMultiplier": null },
+  "onchain": { "inRangeLiquidity": true, "tradable": true },
+  "warnings": ["US market is not in regular hours: OKX prices are last close plus a market estimate, not a live underlying price."]
+}
+```

@@ -1,0 +1,29 @@
+---
+title: "x402 over REST"
+description: "Paid REST routes answer 402 with payment requirements; retry with a signed payment header."
+group: "Paying"
+order: 1
+---
+
+REST routes are gated by OKX's `@okxweb3/app-x402-express` middleware (x402 version 2, `exact` scheme).
+
+## The round trip
+
+1. Call the route without payment. It answers `402` with a base64 `PAYMENT-REQUIRED` header listing what to pay: amount, asset, network and `payTo`.
+2. Sign an EIP-3009 `TransferWithAuthorization` for that amount of USD₮0. The EIP-712 domain is name `USD₮0` (with the ₮ character), version `1`, chain id 1952.
+3. Retry the same request with the base64 payload in `PAYMENT-SIGNATURE`.
+4. The response carries the tool result, and `PAYMENT-RESPONSE` holds the settlement receipt with its transaction hash.
+
+```bash
+curl -i "https://api-production-86c9.up.railway.app/v1/quote?symbol=NVDA&side=buy&size=100"
+# HTTP/1.1 402 Payment Required
+# PAYMENT-REQUIRED: eyJ4NDAyVmVyc2lvbiI6Mi...
+```
+
+## Clients
+
+Any x402 v2 client that signs EIP-3009 works, for example `x402Client` with `ExactEvmScheme` from `@okxweb3/app-x402-core` and `@okxweb3/app-x402-evm`, backed by a plain viem account.
+
+## Refunds you never need
+
+Input is validated before payment is requested (a bad call gets `400`, not `402`), and settlement happens only after the tool returns `2xx`. A refused call is never charged.

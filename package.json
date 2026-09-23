@@ -1,0 +1,6 @@
+{
+  "name": "roundlot",
+  "private": true,
+  "workspaces": ["service"],
+  "engines": { "node": ">=22" }
+}

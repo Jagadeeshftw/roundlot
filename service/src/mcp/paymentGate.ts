@@ -2,7 +2,7 @@ import type { PaymentPayload } from "@okxweb3/app-x402-core/types";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Config } from "../config.js";
 import type { Payments } from "../x402/payments.js";
-import { acceptsFor, type PaidTool } from "../x402/resourceServer.js";
+import { acceptsFor } from "../x402/resourceServer.js";
 
 // Per-tool x402 over MCP, wire-compatible with @x402/mcp:
 //  - unpaid call      -> isError result, PaymentRequired in structuredContent and
@@ -18,7 +18,7 @@ type Extra = { _meta?: Record<string, unknown> };
 export function withPayment<A>(
   payments: Payments,
   cfg: Config,
-  tool: PaidTool,
+  tool: string,
   description: string,
   handler: (args: A, extra: Extra) => Promise<CallToolResult>,
 ) {
@@ -46,7 +46,7 @@ export function withPayment<A>(
             type: "text",
             text:
               `${tool} costs ${price} in ${cfg.payment.asset.symbol} on ${cfg.payment.name} (${cfg.payment.caip2}). ` +
-              `Pay with an x402-capable MCP client, or call ${cfg.PUBLIC_BASE_URL}/v1/${tool} with an x402 HTTP client. ` +
+              `Pay with an x402-capable MCP client, or call the REST endpoint listed in the catalog with an x402 HTTP client. ` +
               `Reason: ${reason}`,
           },
         ],

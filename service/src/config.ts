@@ -20,6 +20,8 @@ const Env = z
     OKX_PASSPHRASE: z.string().optional(),
     OKX_BASE_URL: z.string().url().default("https://web3.okx.com"),
     RELAYER_PRIVATE_KEY: hexKey.optional(),
+    // Overrides the payment network RPC (e.g. a local fork for tests).
+    PAYMENT_RPC_URL: z.string().url().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.FACILITATOR === "okx") {
@@ -40,5 +42,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     const issues = parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment:\n${issues}`);
   }
-  return { ...parsed.data, payment: paymentNetwork(parsed.data.PAYMENT_NETWORK) };
+  const payment = paymentNetwork(parsed.data.PAYMENT_NETWORK);
+  return {
+    ...parsed.data,
+    payment: parsed.data.PAYMENT_RPC_URL ? { ...payment, rpcUrl: parsed.data.PAYMENT_RPC_URL } : payment,
+  };
 }

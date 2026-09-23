@@ -1,14 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { x402ResourceServer } from "@okxweb3/app-x402-express";
 import type { Request, Response } from "express";
 import { z } from "zod";
 import type { Config } from "../config.js";
+import type { Payments } from "../x402/payments.js";
 import { withPayment } from "./paymentGate.js";
 
 export interface McpDeps {
   cfg: Config;
-  resourceServer: x402ResourceServer;
+  payments: Payments;
   catalog: () => unknown;
 }
 
@@ -17,7 +17,7 @@ const json = (data: unknown) => ({
   structuredContent: data as Record<string, unknown>,
 });
 
-function buildServer({ cfg, resourceServer, catalog }: McpDeps) {
+function buildServer({ cfg, payments, catalog }: McpDeps) {
   const server = new McpServer({ name: "roundlot", version: "0.1.0" });
 
   server.registerTool(
@@ -40,7 +40,7 @@ function buildServer({ cfg, resourceServer, catalog }: McpDeps) {
       inputSchema: { note: z.string().max(80).optional() },
       annotations: { readOnlyHint: true },
     },
-    withPayment(resourceServer, cfg, "ping", "Paid ping", async ({ note }: { note?: string }) =>
+    withPayment(payments, cfg, "ping", "Paid ping", async ({ note }: { note?: string }) =>
       json({ pong: true, note: note ?? null, at: new Date().toISOString() }),
     ),
   );

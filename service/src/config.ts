@@ -13,7 +13,8 @@ const Env = z
     // "okx" = OKX facilitator (verify/settle via web3.okx.com, HMAC-signed with
     // Dev Portal credentials). "local" = in-process facilitator that verifies the
     // EIP-3009 authorization and submits it on-chain from RELAYER_PRIVATE_KEY.
-    FACILITATOR: z.enum(["okx", "local"]).default("okx"),
+    // "off" = catalog only; paid tools answer "payments unavailable".
+    FACILITATOR: z.enum(["okx", "local", "off"]).default("okx"),
     OKX_API_KEY: z.string().optional(),
     OKX_SECRET_KEY: z.string().optional(),
     OKX_PASSPHRASE: z.string().optional(),

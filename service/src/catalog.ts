@@ -2,9 +2,9 @@ import type { Config } from "./config.js";
 import { DATA_NETWORK } from "./networks.js";
 import { XSTOCKS } from "./registry.js";
 import { TOOL_PRICES } from "./x402/resourceServer.js";
-import type { SelectedFacilitator } from "./x402/facilitator.js";
+import type { PaymentsStatus } from "./x402/payments.js";
 
-export function buildCatalog(cfg: Config, facilitator: SelectedFacilitator) {
+export function buildCatalog(cfg: Config, payments: PaymentsStatus) {
   return {
     service: "Roundlot",
     description:
@@ -20,7 +20,8 @@ export function buildCatalog(cfg: Config, facilitator: SelectedFacilitator) {
         name: cfg.payment.name,
         asset: cfg.payment.asset,
         payTo: cfg.PAY_TO,
-        facilitator: facilitator.kind,
+        facilitator: payments.facilitator,
+        status: payments.state,
         note: "Payments settle on X Layer testnet so nobody spends real money on a demo. Mainnet payments are configured but disabled.",
       },
     },

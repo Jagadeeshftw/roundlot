@@ -1,7 +1,7 @@
-import type { x402ResourceServer } from "@okxweb3/app-x402-express";
 import type { PaymentPayload } from "@okxweb3/app-x402-core/types";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Config } from "../config.js";
+import type { Payments } from "../x402/payments.js";
 import { acceptsFor, type PaidTool } from "../x402/resourceServer.js";
 
 // Per-tool x402 over MCP, wire-compatible with @x402/mcp:
@@ -16,7 +16,7 @@ export const MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response";
 type Extra = { _meta?: Record<string, unknown> };
 
 export function withPayment<A>(
-  server: x402ResourceServer,
+  payments: Payments,
   cfg: Config,
   tool: PaidTool,
   description: string,
@@ -25,6 +25,13 @@ export function withPayment<A>(
   const resourceInfo = { url: `mcp://tool/${tool}`, description, mimeType: "application/json" };
 
   return async (args: A, extra: Extra): Promise<CallToolResult> => {
+    const server = payments.resourceServer;
+    if (!server) {
+      return {
+        isError: true,
+        content: [{ type: "text", text: `Payments are unavailable right now (${JSON.stringify(payments.status)}); ${tool} cannot be served.` }],
+      };
+    }
     const requirements = await server.buildPaymentRequirementsFromOptions([acceptsFor(tool, cfg)], {});
 
     const paymentRequired = async (reason: string): Promise<CallToolResult> => {

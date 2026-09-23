@@ -22,7 +22,6 @@
   --color-gray-500: #c0c0c0;
   --color-gray-600: #8b8b8b;
 
-  --color-brand: #f17463;
   --shadow-aceternity:
     0px 2px 3px -1px rgba(0, 0, 0, 0.1), 0px 1px 0px 0px rgba(25, 28, 33, 0.02),
     0px 0px 0px 1px rgba(25, 28, 33, 0.08);
@@ -56,6 +55,11 @@
 }
 
 :root {
+  /* Roundlot emerald: text on white 5.5:1, white text on it 5.5:1. */
+  --brand: #047857;
+  --brand-soft: #ecfdf5;
+  --on-brand: #ffffff;
+  --muted: #525252;
   --divide: var(--color-gray-300);
   --primary: var(--color-neutral-900);
   --canvas: var(--color-neutral-400);
@@ -66,6 +70,10 @@
 }
 
 .dark {
+  --brand: #34d399;
+  --brand-soft: #062e22;
+  --on-brand: #000000;
+  --muted: #a3a3a3;
   --divide: var(--color-neutral-800);
   --primary: var(--color-neutral-100);
   --canvas: var(--color-neutral-200);
@@ -76,6 +84,10 @@
 }
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-muted: var(--muted);
   --color-divide: var(--divide);
   --color-primary: var(--primary);
   --color-canvas: var(--canvas);

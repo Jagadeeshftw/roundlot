@@ -1,11 +1,10 @@
 const config = {
-  websiteName:
-    "Notus: Build and Manage AI-Driven Agentic Workflows | Aceternity UI Pro Template",
-  websiteUrl:
-    process.env.NEXT_PUBLIC_WEBSITE_URL ||
-    "https://notus-agent-marketing-template.vercel.app/",
+  websiteName: "Roundlot: pay-per-call xStock data for AI agents",
+  websiteUrl: process.env.NEXT_PUBLIC_WEBSITE_URL || "https://roundlot.0xo.in",
   websiteDescription:
-    "Empower your technical teams to create, simulate and manage AI-driven workflows visually. Notus provides an intuitive platform for developing and testing agentic systems, helping you build the next generation of intelligent applications with confidence.",
+    "An MCP server and REST API for NVDA, SPY and TSLA xStocks on X Layer: quotes against live Uniswap v3 liquidity, market-session checks and unsigned trade plans, each paid per call with x402.",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "https://api-production-86c9.up.railway.app",
+  repoUrl: "https://github.com/Jagadeeshftw/roundlot",
 };
 
 export default config;

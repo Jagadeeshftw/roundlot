@@ -82,12 +82,12 @@ export async function route(input: QuoteInput): Promise<Route> {
 }
 
 export async function quote(input: QuoteInput) {
+  const x = requireSymbol(input.symbol);
   const [r, pool, market] = await Promise.all([
     route(input),
-    getPoolState(requireSymbol(input.symbol)),
-    getMarket(requireSymbol(input.symbol).okxInstId).catch((err: Error) => err),
+    getPoolState(x),
+    getMarket(x.okxInstId).catch((err: Error) => err),
   ]);
-  const { x } = r;
   const stable = x.pool.quote;
   const apw = toFloat18(r.assetsPerWrapped);
   const shares = toFloat18(r.sharesAmount);

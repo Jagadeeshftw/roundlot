@@ -3,12 +3,15 @@ import { xLayer } from "viem/chains";
 import { DATA_NETWORK } from "../networks.js";
 
 // X Layer mainnet reader. Calls are batched through Multicall3; the fallback
-// transport moves to the next RPC on errors or 429s.
+// transport moves to the next RPC on errors or 429s. DATA_RPC_URLS overrides
+// the endpoints (comma-separated), e.g. to point tests at a local fork.
+const rpcUrls = process.env.DATA_RPC_URLS?.split(",").map((u) => u.trim()).filter(Boolean) ?? DATA_NETWORK.rpcUrls;
+
 export const mainnet = createPublicClient({
   chain: xLayer,
   batch: { multicall: { wait: 10 } },
   transport: fallback(
-    DATA_NETWORK.rpcUrls.map((url) => http(url, { timeout: 8_000, retryCount: 1 })),
+    rpcUrls.map((url) => http(url, { timeout: 8_000, retryCount: 1 })),
     { rank: false },
   ),
 });
@@ -67,6 +70,7 @@ export const wrapperAbi = parseAbi([
   "function previewDeposit(uint256 assets) view returns (uint256)",
   "function previewRedeem(uint256 shares) view returns (uint256)",
   "function previewWithdraw(uint256 assets) view returns (uint256)",
+  "function previewMint(uint256 shares) view returns (uint256)",
   "function deposit(uint256 assets, address receiver) returns (uint256 shares)",
   "function redeem(uint256 shares, address receiver, address owner) returns (uint256 assets)",
   "function balanceOf(address) view returns (uint256)",

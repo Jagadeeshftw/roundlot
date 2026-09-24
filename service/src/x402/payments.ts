@@ -37,7 +37,8 @@ export async function setupPayments(cfg: Config): Promise<Payments> {
     if (!result.success) return;
     const amount = Number(requirements.amount) / 10 ** cfg.payment.asset.decimals;
     recordSettlement(cfg.payment, {
-      resource: paymentPayload.resource?.url ?? "unknown",
+      // Try-it calls the API on loopback; show the public URL instead.
+      resource: (paymentPayload.resource?.url ?? "unknown").replace(/^http:\/\/127\.0\.0\.1:\d+/, cfg.PUBLIC_BASE_URL),
       amount: `$${amount} ${cfg.payment.asset.symbol}`,
       payer: result.payer ?? null,
       transaction: result.transaction,

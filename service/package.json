@@ -16,7 +16,8 @@
     "test:fork": "FORK=1 vitest run test/planTrade.fork.test.ts",
     "demo": "tsx --env-file-if-exists=../.env scripts/demo-agent.ts",
     "demo:okx": "tsx --env-file-if-exists=../.env scripts/demo-okx.ts",
-    "warm": "tsx --env-file-if-exists=../.env scripts/warm.ts"
+    "warm": "tsx --env-file-if-exists=../.env scripts/warm.ts",
+    "check:prod": "tsx --env-file-if-exists=../.env scripts/check-prod.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

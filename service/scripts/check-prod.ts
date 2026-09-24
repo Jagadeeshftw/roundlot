@@ -2,7 +2,9 @@
 // API, every paid tool over REST and over both MCP carriers, Try-it, and the
 // activity feed. Spends about $0.06 of testnet USD₮0 from the demo wallet and
 // one of the three hourly Try-it tries.
-// Usage: npx tsx --env-file=../.env scripts/check-prod.ts [--no-paid]
+// Usage: npx tsx --env-file=../.env scripts/check-prod.ts [--no-paid] [--no-try]
+//   --no-paid  skip everything that spends testnet USD₮0
+//   --no-try   pay the REST and MCP checks but leave the Try-it quota alone
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -15,6 +17,7 @@ import { createBuyer } from "../src/x402/buyer.js";
 const api = process.env.API_URL ?? "https://api.roundlot.0xo.in";
 const web = process.env.WEB_URL ?? "https://roundlot.0xo.in";
 const paid = !process.argv.includes("--no-paid");
+const tryIt = paid && !process.argv.includes("--no-try");
 const buyer = createBuyer(process.env.DEMO_BUYER_PRIVATE_KEY as `0x${string}`, paymentNetwork("eip155:1952"));
 
 const tty = process.stdout.isTTY;
@@ -152,7 +155,9 @@ if (paid) {
     return settledNote(decodePaymentResponseHeader(r.headers.get("PAYMENT-RESPONSE")!));
   });
 
-  // Try-it
+}
+if (tryIt) {
+  // Try-it (uses one of the visitor's three hourly tries)
   await check("Try-it POST /v1/try", async () => {
     const r = await fetch(`${api}/v1/try`, { method: "POST", headers: { "content-type": "application/json", origin: web }, body: '{"symbol":"NVDA"}' });
     const body = await r.json();

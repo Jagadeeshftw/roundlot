@@ -41,7 +41,14 @@ function createLocalFacilitator(cfg: Config): SelectedFacilitator {
     nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
     rpcUrls: { default: { http: [cfg.payment.rpcUrl] } },
   });
-  const wallet = createWalletClient({ account, chain, transport: http(cfg.payment.rpcUrl) }).extend(publicActions);
+  // X Layer makes a block about every second; viem's default 4 s receipt
+  // polling would add up to 3 s to every paid call.
+  const wallet = createWalletClient({
+    account,
+    chain,
+    pollingInterval: 500,
+    transport: http(cfg.payment.rpcUrl),
+  }).extend(publicActions);
 
   const facilitator = new x402Facilitator();
   registerExactEvmScheme(facilitator, {

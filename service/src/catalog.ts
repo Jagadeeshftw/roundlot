@@ -1,7 +1,7 @@
 import type { Config } from "./config.js";
 import { DATA_NETWORK } from "./networks.js";
 import { XSTOCKS } from "./registry.js";
-import { PAID_TOOLS } from "./tools/index.js";
+import { describeParams, PAID_TOOLS } from "./tools/index.js";
 import type { PaymentsStatus } from "./x402/payments.js";
 
 export function buildCatalog(cfg: Config, payments: PaymentsStatus) {
@@ -34,13 +34,21 @@ export function buildCatalog(cfg: Config, payments: PaymentsStatus) {
       reference: { venue: "OKX spot", instId: x.okxInstId },
     })),
     tools: [
-      { name: "catalog", price: "free", rest: "/v1/catalog", description: "This document." },
+      {
+        name: "catalog",
+        price: "free",
+        rest: "/v1/catalog",
+        description: "This document.",
+        params: [{ name: "symbol", type: "string", required: false, description: "Return one symbol only" }],
+      },
       ...PAID_TOOLS.map((t) => ({
         name: t.name,
         price: t.price,
         asset: cfg.payment.asset.symbol,
         rest: t.restPath,
         description: t.description,
+        params: describeParams(t.input),
+        example: `GET ${cfg.PUBLIC_BASE_URL}${t.restPath}?${t.example}`,
       })),
     ],
     endpoints: {

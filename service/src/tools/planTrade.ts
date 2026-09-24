@@ -24,7 +24,7 @@ export const planTradeInput = z.object({
     .enum(["raw", "wrapped"])
     .default("raw")
     .describe("raw = the account holds / wants the xStock token itself (adds wrap/unwrap steps); wrapped = the ERC-4626 wrapper token"),
-  deadlineSeconds: z.coerce.number().int().min(60).max(3600).default(600),
+  deadlineSeconds: z.coerce.number().int().min(60).max(3600).default(600).describe("Seconds until the swap reverts (60–3600)"),
 });
 export type PlanTradeInput = z.infer<typeof planTradeInput>;
 

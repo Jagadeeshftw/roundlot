@@ -3,7 +3,8 @@ import React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Container } from "./container";
 
-// One real round trip, from a quote Roundlot returned for $1,000 of NVDA.
+// One real round trip, from a quote Roundlot returned for $1,000 of NVDA on
+// 23 Sep 2026. Labelled as a sample: the numbers are not live.
 const lines: { dir?: "out" | "in"; text: string; note?: string }[] = [
   { dir: "out", text: 'tools/call quote {"symbol":"NVDA","side":"buy","size":"1000"}' },
   { dir: "in", text: "payment required · $0.01 USD₮0 · eip155:1952" },
@@ -27,6 +28,7 @@ export const HeroCode = () => {
           <span className="bg-line size-2.5 rounded-full" />
           <span className="bg-line size-2.5 rounded-full" />
           <span className="ml-2">agent ⇄ roundlot /mcp</span>
+          <span className="border-line ml-auto rounded-full border px-2 py-0.5 text-[11px]">sample response</span>
         </div>
         <pre className="overflow-x-auto p-4 font-mono text-[11px] leading-6 text-neutral-900 sm:p-5 sm:text-[13px] dark:text-neutral-100">
           {lines.map((line, i) => (

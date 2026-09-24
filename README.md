@@ -7,7 +7,7 @@ Roundlot is an MCP server (streamable HTTP) and a REST API with the same tools. 
 Built for OKX Dev Day 2026 (Build a Company track, remote), 17–25 September 2026.
 
 - **API:** https://api.roundlot.0xo.in (catalog: [`/v1/catalog`](https://api.roundlot.0xo.in/v1/catalog), MCP: `/mcp`)
-- **OKX.AI:** A2MCP service provider listing in progress (the link goes here once it is live)
+- **OKX.AI:** registered as A2MCP service provider **Agent ID #13873** (ERC-8004 identity on X Layer, [registration tx](https://www.oklink.com/xlayer/tx/0x099ae30195ad817ad07a6c08b46befdd5dcebc71823b203f149a15790f9cea94)); listing page https://www.okx.ai/agents/13873 goes live once OKX's review approves it
 
 ## Tools
 

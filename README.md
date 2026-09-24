@@ -93,7 +93,22 @@ No database: market data is cached in memory (OKX books 2 s, pool state 2 s, tok
 
 `FACILITATOR=okx` (default) uses OKX's facilitator (`web3.okx.com`, verify/settle signed with Developer Portal credentials). `FACILITATOR=local` runs an in-process facilitator from OKX's SDK that verifies the signature and submits `transferWithAuthorization` from our own relayer key. `FACILITATOR=off` serves the free catalog only.
 
-_Which facilitator served the demo, and why, is recorded here once the testnet run is complete._
+**The demo runs on `FACILITATOR=local`.** The OKX Developer Portal key wasn't available in time to test OKX's hosted facilitator against X Layer testnet (`eip155:1952`), so production settles with the facilitator implementation from OKX's own SDK (`x402Facilitator` with `registerExactEvmScheme` from `@okxweb3/app-x402-core` / `app-x402-evm`), running in-process. It verifies each EIP-3009 authorization and submits `transferWithAuthorization` from our relayer [`0x70E5…7156`](https://web3.okx.com/explorer/x-layer-testnet/address/0x70E55b031C9fB28f9E5E21f0cDd13ec9fDe77156), which pays the gas. The `OKXFacilitatorClient` path is wired and selectable with `FACILITATOR=okx`; switching is configuration only.
+
+## Real settlements
+
+Every paid call is a USD₮0 transfer from the payer to Roundlot's [`PAY_TO` address](https://web3.okx.com/explorer/x-layer-testnet/address/0x5BeFc3f1C3703e12edaa316599cbB4b43cB4F2a3). A selection, 24 Sep 2026:
+
+| Payment | Settlement on X Layer testnet |
+|---|---|
+| REST `session` (first real-testnet run) | [`0xe3e0767b…ef60c9`](https://web3.okx.com/explorer/x-layer-testnet/tx/0xe3e0767b2541868bdc604110c731f3fe145520da7a1ffbba5337dcf535ef60c9) |
+| MCP `session`, in-band `_meta` carrier | [`0x3ceec906…70e634`](https://web3.okx.com/explorer/x-layer-testnet/tx/0x3ceec906fbf6ddefcb8ebf17d227d8e68a5ca2f64683e321e8434549e670e634) |
+| REST `quote` against production | [`0x7a9cca0e…0e3388`](https://web3.okx.com/explorer/x-layer-testnet/tx/0x7a9cca0e8ee39a865add1e54054fb63a4a66a0db93a5997bba0a022bb70e3388) |
+| Landing-page Try it click (real browser) | [`0x62ca5dba…85fb9a`](https://web3.okx.com/explorer/x-layer-testnet/tx/0x62ca5dba899d2d47e21e5cc720462906e76411983aa61ae84b03cbed2785fb9a) |
+| REST `plan_trade` (production check) | [`0x359b6d98…547bba`](https://web3.okx.com/explorer/x-layer-testnet/tx/0x359b6d980501302805be0d9e70915dac0454c14ebbc455f16cb4b6e2c6547bba) |
+| MCP `quote`, HTTP 402 / `PAYMENT-SIGNATURE` carrier (production check) | [`0xacd0d788…94841a`](https://web3.okx.com/explorer/x-layer-testnet/tx/0xacd0d788ed2c0ff11600ddf574048645ed28819d214e341b18c6e759d094841a) |
+
+`npm run check:prod -w service` pays every tool over REST, both MCP carriers and Try-it, and prints the settlement links of the run.
 
 ## Run locally
 

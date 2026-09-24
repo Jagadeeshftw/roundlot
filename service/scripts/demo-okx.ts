@@ -4,7 +4,7 @@
 // Usage: BASE_URL=https://api.roundlot.0xo.in npx tsx --env-file=../.env scripts/demo-okx.ts
 import { execFileSync } from "node:child_process";
 
-const base = process.env.BASE_URL ?? "http://localhost:3000";
+const base = process.env.BASE_URL ?? "https://api.roundlot.0xo.in";
 const url = `${base}/v1/quote?symbol=NVDA&side=buy&size=250`;
 const tty = process.stdout.isTTY && !process.env.NO_COLOR;
 const paint = (code: string) => (s: string) => (tty ? `\x1b[${code}m${s}\x1b[0m` : s);

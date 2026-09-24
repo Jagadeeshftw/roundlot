@@ -11,7 +11,7 @@ import { MCP_PAYMENT_META_KEY, MCP_PAYMENT_RESPONSE_META_KEY } from "../src/mcp/
 import { paymentNetwork, txUrl } from "../src/networks.js";
 import { createBuyer } from "../src/x402/buyer.js";
 
-const base = process.env.BASE_URL ?? "http://localhost:3000";
+const base = process.env.BASE_URL ?? "https://api.roundlot.0xo.in";
 const stepMode = process.argv.includes("--step");
 const net = paymentNetwork(process.env.PAYMENT_NETWORK ?? "eip155:1952");
 if (process.env.PAYMENT_RPC_URL) net.rpcUrl = process.env.PAYMENT_RPC_URL;

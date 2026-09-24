@@ -25,7 +25,7 @@ curl -X POST https://api.roundlot.0xo.in/v1/catalog -H 'Content-Type: applicatio
   "service": "Roundlot",
   "networks": {
     "data": { "network": "eip155:196", "name": "X Layer mainnet" },
-    "payment": { "network": "eip155:1952", "asset": { "symbol": "USD₮0", "decimals": 6 }, "facilitator": "okx" }
+    "payment": { "network": "eip155:1952", "asset": { "symbol": "USD₮0", "decimals": 6 }, "facilitator": "local" }
   },
   "symbols": [{
     "symbol": "NVDA",
@@ -37,3 +37,5 @@ curl -X POST https://api.roundlot.0xo.in/v1/catalog -H 'Content-Type: applicatio
   "tools": [{ "name": "quote", "price": "$0.01", "rest": "/v1/quote" }]
 }
 ```
+
+`facilitator` says who settles payments. The demo runs `local`: the facilitator from OKX's x402 SDK, run by Roundlot, with Roundlot's relayer paying the gas. `okx` would mean OKX's hosted facilitator.

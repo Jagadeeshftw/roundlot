@@ -91,9 +91,9 @@ No database: market data is cached in memory (OKX books 2 s, pool state 2 s, tok
 
 ## Facilitator
 
-`FACILITATOR=okx` (default) uses OKX's facilitator (`web3.okx.com`, verify/settle signed with Developer Portal credentials). `FACILITATOR=local` runs an in-process facilitator from OKX's SDK that verifies the signature and submits `transferWithAuthorization` from our own relayer key. `FACILITATOR=off` serves the free catalog only.
-
 **The demo runs on `FACILITATOR=local`.** The OKX Developer Portal key wasn't available in time to test OKX's hosted facilitator against X Layer testnet (`eip155:1952`), so production settles with the facilitator implementation from OKX's own SDK (`x402Facilitator` with `registerExactEvmScheme` from `@okxweb3/app-x402-core` / `app-x402-evm`), running in-process. It verifies each EIP-3009 authorization and submits `transferWithAuthorization` from our relayer [`0x70E5…7156`](https://web3.okx.com/explorer/x-layer-testnet/address/0x70E55b031C9fB28f9E5E21f0cDd13ec9fDe77156), which pays the gas. The `OKXFacilitatorClient` path is wired and selectable with `FACILITATOR=okx`; switching is configuration only.
+
+The three settings: `FACILITATOR=okx` (the code's default, not used in production) uses OKX's facilitator (`web3.okx.com`, verify/settle signed with Developer Portal credentials). `FACILITATOR=local` runs an in-process facilitator from OKX's SDK that verifies the signature and submits `transferWithAuthorization` from our own relayer key. `FACILITATOR=off` serves the free catalog only.
 
 ## Real settlements
 

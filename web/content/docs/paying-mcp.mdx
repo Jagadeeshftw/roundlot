@@ -21,8 +21,27 @@ MCP over streamable HTTP is JSON-RPC on one endpoint, so an HTTP `402` can't pri
     "_meta": { "x402/payment": { "x402Version": 2, "payload": { "...": "signed authorization" } } } } }
 ```
 
+## Two carriers, one gate
+
+x402 over MCP is carried two ways in the wild, and Roundlot speaks both on the same `/mcp` URL:
+
+| Carrier | Unpaid call | Paid retry | Receipt | Used by |
+|---|---|---|---|---|
+| In-band | HTTP 200, `isError` result with `PaymentRequired` | `_meta["x402/payment"]` | result `_meta["x402/payment-response"]` | `@x402/mcp`, clients built on the official MCP SDKs |
+| HTTP | HTTP 402 with a `PAYMENT-REQUIRED` header | `PAYMENT-SIGNATURE` header on the same `tools/call` | `PAYMENT-RESPONSE` header | OKX's `onchainos payment` CLI and the Agent Payments skill |
+
+Clients that send the `MCP-Protocol-Version` header (the official SDKs do; they also reject non-2xx responses) get the in-band carrier. Clients that don't, or that send `PAYMENT-SIGNATURE`, get HTTP 402. Add `?payment=http` or `?payment=meta` to the URL to force one.
+
+With OKX's CLI:
+
+```bash
+onchainos payment quote https://api.roundlot.0xo.in/mcp --tool quote \
+  --param symbol=NVDA --param side=buy --param size=250
+# → "Will pay 0.01 USD₮0 (exact, X Layer Testnet)"
+```
+
 ## Compatibility
 
-This is the wire format of Coinbase's `@x402/mcp`, so its `createx402MCPClient` can pay Roundlot. The server side is implemented on OKX's `@okxweb3/app-x402-core` rather than with `@x402/mcp` itself: that library is built on a different x402 core and calls resource-server methods OKX's core doesn't have.
+The in-band format is the wire format of Coinbase's `@x402/mcp`, so its `createx402MCPClient` can pay Roundlot. The server side is implemented on OKX's `@okxweb3/app-x402-core` rather than with `@x402/mcp` itself: that library is built on a different x402 core and calls resource-server methods OKX's core doesn't have.
 
 Clients that can't sign, such as Claude Desktop, see a second text block with the price and the REST alternative.

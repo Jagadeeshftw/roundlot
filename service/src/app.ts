@@ -6,6 +6,7 @@ import { recentSettlements } from "./activity.js";
 import { cache } from "./data/cache.js";
 import { mainnet } from "./data/chain.js";
 import { getMarket } from "./data/okx.js";
+import { mcpHttpCarrier } from "./mcp/httpCarrier.js";
 import { mcpHandler } from "./mcp/server.js";
 import { rateLimit } from "./rateLimit.js";
 import { resolveSymbol, XSTOCKS } from "./registry.js";
@@ -139,7 +140,11 @@ export async function createApp(cfg: Config) {
   }
 
   const mcp = mcpHandler({ cfg, payments, catalog });
-  app.post("/mcp", (req, res, next) => mcp(req, res).catch(next));
+  app.post(
+    "/mcp",
+    mcpHttpCarrier(new Set(PAID_TOOLS.map((t) => t.name))),
+    (req, res, next) => mcp(req, res).catch(next),
+  );
   app.all("/mcp", (_req, res) => {
     res.status(405).set("Allow", "POST").json({ error: "Use POST for MCP streamable HTTP (stateless)." });
   });

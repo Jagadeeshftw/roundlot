@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Config } from "../config.js";
 import type { Payments } from "../x402/payments.js";
 import { acceptsFor } from "../x402/resourceServer.js";
+import { reportPaymentRequired, reportSettled } from "./httpCarrier.js";
 
 // Per-tool x402 over MCP, wire-compatible with @x402/mcp:
 //  - unpaid call      -> isError result, PaymentRequired in structuredContent and
@@ -10,6 +11,7 @@ import { acceptsFor } from "../x402/resourceServer.js";
 //  - paid retry       -> client sends the signed payload in _meta["x402/payment"]
 //  - success          -> settlement receipt in result _meta["x402/payment-response"]
 // Implemented on OKX's app-x402-core so the process has a single x402 core.
+// httpCarrier.ts adds the HTTP 402 / PAYMENT-SIGNATURE carrier on top.
 export const MCP_PAYMENT_META_KEY = "x402/payment";
 export const MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response";
 
@@ -36,6 +38,7 @@ export function withPayment<A>(
 
     const paymentRequired = async (reason: string): Promise<CallToolResult> => {
       const pr = await server.createPaymentRequiredResponse(requirements, resourceInfo, reason);
+      reportPaymentRequired(pr);
       const price = acceptsFor(tool, cfg).price;
       return {
         isError: true,
@@ -70,6 +73,7 @@ export function withPayment<A>(
     if (!settled.success) {
       return paymentRequired(`Payment settlement failed: ${settled.errorReason ?? "unknown"}`);
     }
+    reportSettled(settled);
     return { ...result, _meta: { ...result._meta, [MCP_PAYMENT_RESPONSE_META_KEY]: settled } };
   };
 }

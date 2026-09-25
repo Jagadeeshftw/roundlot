@@ -7,7 +7,9 @@
     "dev:turbopack": "ACEBUILDER_TAGGER_ENABLED=true next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "docs:dates": "node scripts/docs-updated.mjs",
+    "docs:gate": "node scripts/docs-gate.mjs"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",

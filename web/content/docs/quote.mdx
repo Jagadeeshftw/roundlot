@@ -1,38 +1,95 @@
 ---
 title: "quote"
-description: "The fill for a buy or sell against the live Uniswap v3 pool, compared with the OKX spot book."
-group: "Tools"
-order: 3
+description: "The fill for a buy or sell of an xStock against the live Uniswap v3 pool on X Layer mainnet, compared with the OKX spot book."
 price: "$0.01 per call"
 ---
 
+<Hint type="info" title="Data on mainnet, payment on testnet.">
+Prices come from X Layer mainnet (`eip155:196`); the $0.01 is paid in testnet USD₮0 (`eip155:1952`). Not investment advice.
+</Hint>
+
 ## Parameters
 
-| Name | Type | Meaning |
+| Name | Type | Description |
 |---|---|---|
-| `symbol` | string | NVDA, SPY or TSLA |
-| `side` | `buy` or `sell` | buy pays stablecoin for the xStock; sell is the reverse |
-| `size` | decimal | Trade size in the unit given by `sizeUnit` |
-| `sizeUnit` | `usd` or `shares` | Default `usd`. Shares are xStock tokens, one per underlying share |
+| `symbol` | string, required | NVDA, SPY or TSLA (NVDAx and wNVDAx forms accepted) |
+| `side` | `buy` or `sell`, required | `buy` pays stablecoin for the xStock; `sell` is the reverse |
+| `size` | decimal, required | Trade size, in the unit given by `sizeUnit` |
+| `sizeUnit` | `usd` or `shares`, default `usd` | `usd` is stablecoin notional; `shares` are xStock tokens, one per underlying share |
 
-## How it prices
+## Request
 
-Quotes come from Uniswap's QuoterV2 on X Layer mainnet against the wrapped token's pool (wNVDAx/USDG, wSPYx/USDG, wTSLAx/USDC). Pool prices are per wrapped token, so they are divided by the ERC-4626 rate to give a per-share price comparable with OKX. A size that would run the pool out of in-range liquidity is refused with `insufficient_liquidity` and not charged.
+The first call answers `402` with the price; pay it and repeat the same request. See [How x402 payments work](/docs/x402).
 
-## Response (trimmed)
+<Tabs>
+<Tab label="REST">
+
+```bash
+curl -i "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250"
+```
+
+</Tab>
+<Tab label="MCP">
+
+```bash
+curl https://api.roundlot.0xo.in/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"quote","arguments":{"symbol":"NVDA","side":"buy","size":"250"}}}'
+```
+
+</Tab>
+<Tab label="onchainos">
+
+```bash
+onchainos payment quote "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250"
+```
+
+</Tab>
+</Tabs>
+
+## Response
+
+Buying $250 of NVDA, read on 25 Sep 2026 at 03:42 UTC:
 
 ```json
 {
-  "symbol": "NVDA", "side": "buy", "size": { "amount": "1000", "unit": "usd" },
+  "symbol": "NVDA", "side": "buy",
+  "size": { "amount": "250", "unit": "usd" },
   "fill": {
-    "venue": "Uniswap v3", "feeBps": 5,
-    "pay": { "token": "USDG", "amount": "1000" },
-    "receive": { "token": "wNVDAx", "amount": "4.359824321933540634", "shares": 4.36724124 },
-    "avgPricePerShare": 228.9775, "poolMidPerShare": 228.8497, "priceImpactBps": 5.6
+    "venue": "Uniswap v3", "pool": "0x2a2B11730C2b6d99a58034A869dd810D7300a7b2", "feeBps": 5,
+    "pay": { "token": "USDG", "amount": "250" },
+    "receive": { "token": "wNVDAx", "amount": "1.111385027823429801", "shares": 1.11327571 },
+    "avgPricePerShare": 224.5625,
+    "poolMidPerShare": 224.4462,
+    "priceImpactBps": 5.2,
+    "gasEstimate": "122488"
   },
-  "reference": { "venue": "OKX spot", "instId": "XNVDA-USDT", "onchainEdgeBps": 3.6 },
-  "data": { "network": "eip155:196" }
+  "reference": {
+    "venue": "OKX spot", "instId": "XNVDA-USDT", "available": true,
+    "bid": 224.69, "ask": 224.74, "mid": 224.715, "spreadBps": 2.2,
+    "onchainEdgeBps": 7.9
+  },
+  "units": { "sharesPerWrappedToken": 1.001701196801074 },
+  "data": { "network": "eip155:196", "blockNumber": "71538728" }
 }
 ```
 
-`onchainEdgeBps` is positive when the on-chain fill beats crossing the OKX book.
+- `receive.shares` is the wrapped amount converted to shares; see [xStocks explained](/docs/xstocks).
+- `onchainEdgeBps` is positive when the on-chain fill beats crossing the OKX book; see [How prices are made](/docs/prices).
+
+<Hint type="success" title="Refused calls are never charged.">
+Payment settles only after the tool returns a result.
+</Hint>
+
+## Errors
+
+| Code | HTTP | When |
+|---|---|---|
+| `invalid_input` | 400 | A parameter is missing or malformed; no payment is asked for |
+| `unknown_symbol` | 400 | The symbol isn't NVDA, SPY or TSLA |
+| `insufficient_liquidity` | 422 | The pool can't fill this size |
+| `token_paused` | 422 | The issuer has paused transfers |
+| `rate_limited` | 429 | More than 60 requests a minute from your IP |
+| `payments_unavailable` | 503 | The facilitator isn't reachable; the free catalog still works |
+| `upstream_error` | 502 | X Layer RPC or OKX market data failed; try again |
+
+None of these are charged.

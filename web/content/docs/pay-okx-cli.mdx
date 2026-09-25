@@ -1,0 +1,60 @@
+---
+title: "Pay with the OKX CLI"
+description: "OKX's onchainos CLI reads Roundlot's 402 challenge, signs it with a local key or the Agentic Wallet, and decodes the receipt."
+---
+
+## Read the challenge
+
+```bash
+onchainos payment quote "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250"
+```
+
+The CLI decodes the `402` and summarizes it as `Will pay 0.01 USD₮0 (exact, X Layer Testnet)`. For MCP, name the tool:
+
+```bash
+onchainos payment quote https://api.roundlot.0xo.in/mcp --tool quote --param symbol=NVDA --param side=buy --param size=250
+```
+
+## Sign
+
+<Tabs>
+<Tab label="Agentic Wallet (TEE)">
+
+```bash
+onchainos payment pay --payment-id <id from quote> --selected-index 0 --yes
+```
+
+The CLI signs in OKX's TEE, repeats the request with `PAYMENT-SIGNATURE` and prints the receipt.
+
+</Tab>
+<Tab label="Local key">
+
+```bash
+PR=$(curl -s -i "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250" | grep -i '^payment-required' | cut -d' ' -f2 | tr -d '\r')
+EVM_PRIVATE_KEY=0x... onchainos payment pay-local --payload "$PR"
+```
+
+`pay-local` returns `header_name` (`PAYMENT-SIGNATURE`) and `authorization_header`. Repeat the request with that header yourself.
+
+</Tab>
+</Tabs>
+
+<Hint type="warning" title="Local keys.">
+`pay-local` signs with a plain private key on your machine. Use a testnet-only key.
+</Hint>
+
+## Decode the receipt
+
+```bash
+onchainos payment decode-receipt --header "<PAYMENT-RESPONSE value>"
+```
+
+It prints `status`, `transaction`, `payer` and `chainId`.
+
+## One command
+
+The repository wraps all of this, using a funded testnet key:
+
+```bash
+DEMO_BUYER_PRIVATE_KEY=0x... npm run demo:okx -w service
+```

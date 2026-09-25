@@ -1,0 +1,46 @@
+---
+title: "How prices are made"
+description: "Fills come from Uniswap's QuoterV2 on X Layer mainnet; the reference is OKX's public spot book. How the two are fetched, compared and cached, and why partial fills are refused."
+---
+
+## On-chain fill: QuoterV2
+
+`quote` and `plan_trade` price trades with Uniswap's QuoterV2 (`0xd1b797d92d87b688193a2b976efc8d577d204343`) against the wrapper's pool, whose address comes from the Uniswap v3 factory:
+
+| Side and size unit | Quote |
+|---|---|
+| buy, `usd` | exact input: this much stablecoin in |
+| buy, `shares` | exact output: this many shares out |
+| sell, `shares` | exact input: this many shares in |
+| sell, `usd` | exact output: this much stablecoin out |
+
+The result gives the amounts, the **average price per share**, the **pool mid per share** and **price impact** (average versus mid, in basis points).
+
+## Partial fills are refused
+
+If a swap would push the price to the edge of the pool's range, QuoterV2 returns a partial fill instead of failing. Roundlot detects that (the post-swap price hits the tick bound, or the exact-output quote reverts) and refuses with `insufficient_liquidity`. You get an error and no charge, never a quote for less than you asked.
+
+<Hint type="warning" title="Thin pools.">
+TSLA's pool is the thinnest of the three: on 23 Sep 2026 a $10,000 buy moved it about 94 bps, against 17 bps for NVDA and 12 bps for SPY. Sizes that exhaust in-range liquidity are refused.
+</Hint>
+
+## Reference: the OKX spot book
+
+Roundlot reads OKX's public order book and ticker for `XNVDA-USDT`, `XSPY-USDT` and `XTSLA-USDT`, trying `www.okx.com` and then regional hosts. The quote's `reference` block gives bid, ask, mid and spread, and `onchainEdgeBps`:
+
+- for a buy, how much cheaper the on-chain average is than the OKX ask;
+- for a sell, how much better it is than the OKX bid.
+
+Positive means the on-chain fill beats crossing the OKX book. USDG and USDC are treated as equal to USDT.
+
+## Freshness
+
+| Data | Cached for |
+|---|---|
+| OKX order book and ticker | 2 s |
+| Pool state (price, liquidity) | 2 s |
+| Token state (multiplier, pause, wrapper rate) | 30 s |
+| OKX instrument state | 60 s |
+| Pool addresses | 24 h |
+
+Every response carries the mainnet block number it was read at.

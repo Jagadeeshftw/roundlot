@@ -1,0 +1,33 @@
+---
+title: "Market sessions"
+description: "xStocks trade around the clock, but their reference price only tracks the live stock during US regular hours. How session works it out, and what else it checks."
+---
+
+## US equity session
+
+`session` computes the NYSE session in New York time, including daylight saving:
+
+| Phase | New York time |
+|---|---|
+| `pre_market` | 04:00 – 09:30 |
+| `regular` | 09:30 – 16:00 |
+| `post_market` | 16:00 – 20:00 |
+| `closed` | overnight, weekends and NYSE holidays |
+
+On early-close days regular trading ends at 13:00 and after-hours at 17:00. The calendar covers NYSE holidays and early closes for 2026 and 2027, from nyse.com.
+
+Outside regular hours, OKX prices xStocks as the **last close plus a market estimate**, not a live underlying price, and `session` adds a warning saying so.
+
+## Holidays and early closes
+
+| Year | Full closures | Early closes (13:00 ET) |
+|---|---|---|
+| 2026 | 1 Jan, 19 Jan, 16 Feb, 3 Apr, 25 May, 19 Jun, 3 Jul, 7 Sep, 26 Nov, 25 Dec | 27 Nov, 24 Dec |
+| 2027 | 1 Jan, 18 Jan, 15 Feb, 26 Mar, 31 May, 18 Jun, 5 Jul, 6 Sep, 25 Nov, 24 Dec | 26 Nov |
+
+## What else is checked
+
+- **OKX instrument state:** `live`, or another state such as `suspend`, with a warning when it isn't `live`.
+- **Issuer pause:** a paused token makes `quote` and `plan_trade` refuse with `token_paused`.
+- **Scheduled multiplier change:** reported with its activation time; `plan_trade` refuses when it falls inside the trade's deadline window.
+- **Pool liquidity:** whether the pool has in-range liquidity, so `tradable` is `true` only when the token isn't paused and the pool can trade.

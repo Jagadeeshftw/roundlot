@@ -1,0 +1,29 @@
+---
+title: "Try it in the browser"
+description: "The landing page's Try it section pays for one real quote from Roundlot's demo wallet, so you can see a paid call without a wallet of your own."
+---
+
+## What happens
+
+1. Pick **NVDA**, **SPY** or **TSLA** in the [Try it section](/#try) and press **Pay $0.01 and quote**.
+2. The page calls `POST /v1/try`. Roundlot's server-side demo wallet then calls the normal paid `/v1/quote` endpoint for **$100 of the stock**: it gets the `402`, signs the payment and repeats the call. This is the same x402 path any client uses.
+3. The page shows three things: the quote result, the payment receipt (`PAYMENT-RESPONSE`), and a link to the settlement on the X Layer testnet explorer.
+
+A try costs the demo wallet $0.01 of testnet USD₮0.
+
+## Limits
+
+| Limit | Value | What you see |
+|---|---|---|
+| Per visitor | 3 tries per hour | `429 try_it_limit` |
+| Across all visitors | 200 tries per day | `429 try_it_daily_cap` |
+| Demo wallet balance | at least $1 of testnet USD₮0 | `503 demo_wallet_low` |
+| Concurrency | one paid call at a time | requests wait their turn |
+
+<Hint type="info">
+Try it only accepts requests from the Roundlot site (CORS). To pay from your own code, see [Pay from code](/docs/pay-from-code).
+</Hint>
+
+## Status
+
+Try it runs only when the API has `TRY_IT_ENABLED=true`; otherwise `/v1/try` answers `404 try_it_disabled` and the section is hidden.

@@ -1,0 +1,40 @@
+---
+title: "FAQ"
+description: "Short answers to the questions people ask first."
+---
+
+## Do I need an OKX account?
+
+No. Any wallet that can sign an EIP-712 message can pay. Testnet USD₮0 comes from the X Layer faucet. The [OKX Agentic Wallet](/docs/pay-agentic-wallet) is one convenient option.
+
+## Why are payments on testnet?
+
+So anyone can try every tool without spending real money. The data and the trade plans are real X Layer mainnet; mainnet payments are configured and switched off.
+
+## Do I need gas?
+
+No. The facilitator submits each payment and pays its gas.
+
+## Does Roundlot hold keys or funds?
+
+No. `plan_trade` returns unsigned transactions for your account to sign and send. Roundlot only receives the per-call fee. See [Security and trust](/docs/security).
+
+## What if a call fails?
+
+Payment settles only after the tool succeeds. A refused quote or plan, such as a size the pool can't fill, is never charged.
+
+## Which MCP clients can pay?
+
+Clients that follow the `@x402/mcp` convention or send x402 headers, such as OKX's CLI and Agent Payments skill. Clients that can't sign see the price and the REST alternative instead. See [x402 over MCP](/docs/paying-mcp).
+
+## Why do on-chain and OKX prices differ?
+
+They're different markets. The on-chain pool is a Uniswap v3 pool on X Layer; OKX is a centralized order book. Outside US hours OKX's price is an estimate. `quote` reports the gap as `onchainEdgeBps`.
+
+## Why only NVDA, SPY and TSLA?
+
+They're the xStocks with usable Uniswap v3 liquidity on X Layer today.
+
+## Is this investment advice?
+
+No.

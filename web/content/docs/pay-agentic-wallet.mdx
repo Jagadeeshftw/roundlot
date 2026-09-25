@@ -1,0 +1,39 @@
+---
+title: "Pay with OKX Agentic Wallet"
+description: "Claude Code with OKX's Agent Payments skill discovers Roundlot's price, asks you to confirm, and pays from your OKX Agentic Wallet. What you see at each step."
+---
+
+## What you need
+
+- Claude Code with OKX's Onchain OS CLI (`onchainos`) and its **okx-agent-payments-protocol** skill installed. See [OKX's Onchain OS docs](https://web3.okx.com/onchainos/dev-docs).
+- An OKX Agentic Wallet, logged in with `onchainos wallet login` (email or social login in the browser; the key stays in OKX's TEE).
+- Testnet USD₮0 in the wallet's X Layer address, from the [X Layer faucet](https://web3.okx.com/xlayer/faucet/xlayerfaucet). No OKB is needed: X Layer payments made by the skill have their gas paid by the platform.
+
+## Ask
+
+In Claude Code:
+
+```text
+Using Roundlot at https://api.roundlot.0xo.in, is the US market open for NVDA right now, and what would $250 of it cost me on X Layer?
+```
+
+## What happens
+
+1. Claude reads the API and the catalog, loads the payments skill, and runs `onchainos wallet status`.
+2. It runs `onchainos payment quote` for `/v1/session` and `/v1/quote`. Each answers `402`; nothing is paid yet.
+3. It stops and shows the terms. In our runs the card opened with *"Answering your two questions needs two paid Roundlot calls. Here are the terms — please confirm before I proceed."*, listed each call's resource, amount (0.005 and 0.01 USD₮0), network (X Layer Testnet, `eip155:1952`), token and pay-to address, and ended *"Proceed with both payments?"*.
+4. You confirm, for example `Yes, pay those two.`
+5. It runs `onchainos payment pay --payment-id … --selected-index 0 --yes` for each call. The wallet signs in OKX's TEE and the CLI repeats the request with `PAYMENT-SIGNATURE`.
+6. It answers with the market phase, the $250 fill (shares, average price, impact, comparison with OKX) and the two settlement transaction hashes.
+
+<Hint type="success" title="You approve every payment.">
+The skill stops before paying and never pays without your confirmation. The payments settle on X Layer testnet.
+</Hint>
+
+## Timing
+
+In three production runs on 24 Sep 2026 the confirm card appeared after 45–81 s and both payments settled 29–58 s after confirming.
+
+## Known quirk
+
+In one run the CLI repeated a call without its `symbol` parameter. Roundlot answered `400 invalid_input` without charging, and the agent retried with the parameter and paid.

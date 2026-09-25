@@ -1,8 +1,6 @@
 ---
 title: "plan_trade"
-description: "Ordered, unsigned X Layer mainnet transactions to execute a buy or sell. Your account signs and sends them."
-group: "Tools"
-order: 4
+description: "Ordered, unsigned X Layer mainnet transactions that execute a buy or sell of an xStock. Your account signs and sends them; Roundlot never does."
 price: "$0.02 per call"
 ---
 
@@ -10,31 +8,83 @@ price: "$0.02 per call"
 
 Everything [`quote`](/docs/quote) takes, plus:
 
-| Name | Type | Meaning |
+| Name | Type | Description |
 |---|---|---|
-| `account` | address | The account that will sign the transactions and receive the output |
-| `maxSlippageBps` | integer 1–1000 | Default 50. Sets `amountOutMinimum` or `amountInMaximum` |
-| `tokenForm` | `raw` or `wrapped` | Default `raw`: the account holds or wants the xStock itself, which adds wrap or unwrap steps |
-| `deadlineSeconds` | integer 60–3600 | Default 600 |
+| `account` | address, required | The account that will sign the transactions and receive the output |
+| `maxSlippageBps` | number, default 50 | Worst acceptable fill against the quote, 1–1000; sets `amountOutMinimum` or `amountInMaximum` |
+| `tokenForm` | `raw` or `wrapped`, default `raw` | `raw`: the account holds or wants the xStock itself, which adds wrap or unwrap steps. `wrapped`: the ERC-4626 wrapper token |
+| `deadlineSeconds` | number, default 600 | Seconds until the swap reverts, 60–3600 |
 
-## The steps
+## Request
 
-Depending on side and token form, the plan is some of: **approve** → **wrap** (ERC-4626 deposit) → **swap** (SwapRouter02, wrapped in `multicall(deadline, …)`) → **unwrap** (redeem). Approvals the account already has are skipped, and a warning appears if its balance is too low.
+<Tabs>
+<Tab label="REST">
 
-Plans are refused while an issuer multiplier change falls inside the deadline window.
+```bash
+curl -i "https://api.roundlot.0xo.in/v1/plan-trade?symbol=NVDA&side=buy&size=250&account=0xYourAddress"
+```
 
-## Response (trimmed)
+</Tab>
+<Tab label="MCP">
+
+```bash
+curl https://api.roundlot.0xo.in/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"plan_trade","arguments":{"symbol":"NVDA","side":"buy","size":"250","account":"0xYourAddress"}}}'
+```
+
+</Tab>
+</Tabs>
+
+## Response
+
+Buying $250 of NVDA delivered as the raw token, planned on 25 Sep 2026 at 03:54 UTC (calldata shortened):
 
 ```json
 {
-  "chainId": 196, "account": "0x…", "symbol": "NVDA", "side": "buy", "tokenForm": "raw",
+  "chainId": 196, "network": "eip155:196",
+  "account": "0x5075FF68A0Efb54dB13423AD924bd680327D305E",
+  "symbol": "NVDA", "side": "buy", "tokenForm": "raw",
   "steps": [
-    { "index": 1, "kind": "approve", "to": "0x4ae4…2dc8", "data": "0x095ea7b3…", "value": "0", "description": "Approve SwapRouter02 to spend USDG" },
-    { "index": 2, "kind": "swap", "to": "0x4f0c…9bca", "data": "0x5ae401dc…", "value": "0", "description": "Swap 250 USDG for at least 1.1051 wNVDAx" },
-    { "index": 3, "kind": "unwrap", "to": "0xa8dd…50d5", "data": "0xba087652…", "value": "0", "description": "Unwrap 1.1051 wNVDAx into 1.1070 NVDAx" }
+    { "index": 1, "kind": "approve", "to": "0x4ae46a509f6b1d9056937ba4500cb143933d2dc8", "data": "0x095ea7b3…", "value": "0",
+      "description": "Approve SwapRouter02 to spend USDG" },
+    { "index": 2, "kind": "swap", "to": "0x4f0c28f5926afda16bf2506d5d9e57ea190f9bca", "data": "0x5ae401dc…", "value": "0",
+      "description": "Swap 250 USDG for at least 1.10567674963162354 wNVDAx" },
+    { "index": 3, "kind": "unwrap", "to": "0xa8ddb5cd96b5222afe198316e9a57caa642850d5", "data": "0xba087652…", "value": "0",
+      "description": "Unwrap 1.10567674963162354 wNVDAx into 1.107557723381118755 NVDAx" }
   ],
-  "limits": { "amountIn": "250", "amountOutMinimum": "1.1051", "maxSlippageBps": 50, "deadline": "2026-09-23T17:10:00.000Z" }
+  "expected": { "pay": "250 USDG", "receive": "1.107557723381118755 NVDAx (any fill above the slippage floor stays as wNVDAx)" },
+  "limits": { "amountIn": "250", "amountOutMinimum": "1.10567674963162354", "maxSlippageBps": 50,
+    "deadline": "2026-09-25T04:04:51.000Z" },
+  "warnings": []
 }
 ```
 
-Every plan shape (raw and wrapped, USD and share sizes, NVDA, SPY and TSLA) is executed on an anvil fork of X Layer mainnet in the repository's tests.
+## The steps
+
+Depending on side and token form, a plan is some of:
+
+1. **approve**: only when the account's allowance is too low; existing approvals are skipped.
+2. **wrap**: ERC-4626 `deposit` of the raw token, when selling the raw form.
+3. **swap**: `SwapRouter02.multicall(deadline, [exactInputSingle | exactOutputSingle])`, so the swap reverts after the deadline.
+4. **unwrap**: ERC-4626 `redeem`, when buying the raw form.
+
+Each approve sits directly before the step that spends it. If the account holds too little of the first token spent, the plan still comes back, with a warning. How to run a plan is in [Executing a plan safely](/docs/executing-plans).
+
+<Hint type="danger" title="Signing moves real funds.">
+The steps are mainnet transactions. Check each `to`, `data` and the limits before you sign, and sign them in order.
+</Hint>
+
+## Errors
+
+| Code | HTTP | When |
+|---|---|---|
+| `invalid_input` | 400 | A parameter is missing or malformed, including `account`; no payment is asked for |
+| `unknown_symbol` | 400 | The symbol isn't NVDA, SPY or TSLA |
+| `insufficient_liquidity` | 422 | The pool can't fill this size |
+| `token_paused` | 422 | The issuer has paused transfers |
+| `multiplier_change_pending` | 422 | A multiplier change activates within the deadline plus 60 s |
+| `rate_limited` | 429 | More than 60 requests a minute from your IP |
+| `payments_unavailable` | 503 | The facilitator isn't reachable; the free catalog still works |
+| `upstream_error` | 502 | X Layer RPC or OKX market data failed; try again |
+
+None of these are charged.

@@ -1,47 +1,52 @@
 ---
 title: "x402 over MCP"
-description: "Payment happens per tool call inside MCP: in-band like @x402/mcp, or over HTTP 402 like OKX's CLI."
-group: "Paying"
-order: 2
+description: "Paid MCP tool calls work two ways on the same /mcp URL: in-band, like @x402/mcp, or over HTTP 402 headers, like OKX's CLI. How each works and how Roundlot picks."
 ---
 
-MCP over streamable HTTP is JSON-RPC on one endpoint, so an HTTP `402` can't price individual tools. Roundlot prices each tool call instead. `initialize`, `tools/list` and `catalog` never ask for payment.
+MCP over streamable HTTP is JSON-RPC on one endpoint, so Roundlot prices each **tool call**, not the endpoint. `initialize`, `tools/list` and `catalog` never ask for payment.
 
-## The round trip
+## In-band carrier
 
-1. Call a paid tool. The result has `isError: true` and carries the x402 `PaymentRequired` object in `structuredContent` and JSON-encoded in `content[0].text`.
+1. Call a paid tool. The result has `isError: true` and carries the x402 `PaymentRequired` object in `structuredContent` (and JSON-encoded in `content[0].text`).
 2. Sign the payment exactly as for REST.
 3. Call the same tool again with the payload in `_meta["x402/payment"]`.
 4. The result arrives with the settlement receipt in `_meta["x402/payment-response"]`.
 
 ```json
-{ "method": "tools/call",
+{ "jsonrpc": "2.0", "id": 2, "method": "tools/call",
   "params": { "name": "quote",
-    "arguments": { "symbol": "NVDA", "side": "buy", "size": "100" },
-    "_meta": { "x402/payment": { "x402Version": 2, "payload": { "...": "signed authorization" } } } } }
+    "arguments": { "symbol": "NVDA", "side": "buy", "size": "250" },
+    "_meta": { "x402/payment": { "x402Version": 2, "payload": { "signature": "0x…", "authorization": { } } } } } }
 ```
 
-## Two carriers, one gate
+This is the wire format of Coinbase's `@x402/mcp`, so its clients can pay Roundlot. The server side is built on OKX's `@okxweb3/app-x402-core` rather than `@x402/mcp`, which is built on a different x402 core.
 
-x402 over MCP is carried two ways in the wild, and Roundlot speaks both on the same `/mcp` URL:
+## HTTP carrier
 
-| Carrier | Unpaid call | Paid retry | Receipt | Used by |
-|---|---|---|---|---|
-| In-band | HTTP 200, `isError` result with `PaymentRequired` | `_meta["x402/payment"]` | result `_meta["x402/payment-response"]` | `@x402/mcp`, clients built on the official MCP SDKs |
-| HTTP | HTTP 402 with a `PAYMENT-REQUIRED` header | `PAYMENT-SIGNATURE` header on the same `tools/call` | `PAYMENT-RESPONSE` header | OKX's `onchainos payment` CLI and the Agent Payments skill |
+1. Call a paid tool. The HTTP response is `402` with a `PAYMENT-REQUIRED` header; the body is the same JSON-RPC result.
+2. Repeat the same `tools/call` with a `PAYMENT-SIGNATURE` header.
+3. The response is `200` with the tool result and a `PAYMENT-RESPONSE` header.
 
-Clients that send the `MCP-Protocol-Version` header (the official SDKs do; they also reject non-2xx responses) get the in-band carrier. Clients that don't, or that send `PAYMENT-SIGNATURE`, get HTTP 402. Add `?payment=http` or `?payment=meta` to the URL to force one.
+This is what OKX's `onchainos payment` CLI and the OKX Agent Payments skill expect.
 
-With OKX's CLI:
+## How Roundlot picks
+
+| Request | Carrier |
+|---|---|
+| Has a `PAYMENT-SIGNATURE` header | HTTP |
+| Has a payment in `_meta["x402/payment"]` | in-band |
+| Sends `MCP-Protocol-Version` (the official MCP SDKs do) | in-band |
+| Doesn't send it (OKX's CLI) | HTTP |
+| URL has `?payment=http` or `?payment=meta` | the one you ask for |
+
+The official SDKs reject non-2xx responses, which is why they get the in-band carrier. Both carriers go through the same payment gate, so pricing, verification and "refused calls are never charged" are identical.
 
 ```bash
-onchainos payment quote https://api.roundlot.0xo.in/mcp --tool quote \
-  --param symbol=NVDA --param side=buy --param size=250
-# → "Will pay 0.01 USD₮0 (exact, X Layer Testnet)"
+curl -i https://api.roundlot.0xo.in/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"quote","arguments":{"symbol":"NVDA","side":"buy","size":"250"}}}'
+# HTTP/2 402 + payment-required header
 ```
 
-## Compatibility
-
-The in-band format is the wire format of Coinbase's `@x402/mcp`, so its `createx402MCPClient` can pay Roundlot. The server side is implemented on OKX's `@okxweb3/app-x402-core` rather than with `@x402/mcp` itself: that library is built on a different x402 core and calls resource-server methods OKX's core doesn't have.
-
-Clients that can't sign, such as Claude Desktop, see a second text block with the price and the REST alternative.
+<Hint type="info" title="Clients that can't sign.">
+Claude Desktop, Cursor and other MCP clients without a wallet see the price and the REST alternative in a second text block.
+</Hint>

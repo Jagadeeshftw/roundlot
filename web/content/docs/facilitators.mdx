@@ -1,0 +1,30 @@
+---
+title: "Facilitators"
+description: "The facilitator verifies each payment and submits it on-chain. The demo runs Roundlot's own facilitator on X Layer testnet; OKX's hosted facilitator is wired in and switchable."
+---
+
+## What a facilitator does
+
+The facilitator checks a signed payment (signature, amount, recipient and time window, then simulates the transfer) and, after the tool succeeds, submits the `transferWithAuthorization` transaction and pays its gas. Roundlot never sees the payer's key.
+
+## What the demo uses: `local`
+
+<Hint type="warning" title="Payments currently settle through Roundlot's own facilitator.">
+Production runs `FACILITATOR=local`: the facilitator implementation from OKX's x402 SDK (`x402Facilitator` with the exact EVM scheme, from `@okxweb3/app-x402-core` and `@okxweb3/app-x402-evm`), run inside the Roundlot service. Its relayer `0x70E55b031C9fB28f9E5E21f0cDd13ec9fDe77156` submits the settlements and pays the testnet gas.
+</Hint>
+
+Why: an OKX Developer Portal key wasn't available in time to test OKX's hosted facilitator against X Layer testnet (`eip155:1952`) before the demo. Running the SDK's own facilitator kept payments real and on-chain while that was open.
+
+## OKX's hosted facilitator: `okx`
+
+`FACILITATOR=okx` uses `OKXFacilitatorClient` against `https://web3.okx.com`, authenticated with a Developer Portal key. At start-up Roundlot asks the facilitator's `/supported` endpoint whether it lists `exact` on the payment network; if it doesn't, paid tools answer `payments_unavailable` and the free catalog keeps working. Switching between `local` and `okx` is configuration only.
+
+## Settings
+
+| `FACILITATOR` | Who settles | Needs |
+|---|---|---|
+| `local` (production today) | Roundlot's relayer, using OKX's SDK facilitator | `RELAYER_PRIVATE_KEY` with testnet OKB for gas |
+| `okx` | OKX's hosted facilitator | `OKX_API_KEY`, `OKX_SECRET_KEY`, `OKX_PASSPHRASE` |
+| `off` | nobody; paid tools answer `503 payments_unavailable` | nothing |
+
+The catalog's `networks.payment.facilitator` field and `/health` both report which one is running.

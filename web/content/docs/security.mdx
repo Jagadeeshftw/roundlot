@@ -1,0 +1,36 @@
+---
+title: "Security and trust"
+description: "What Roundlot can and can't do with your funds, what a payment authorizes, and what the service records."
+---
+
+## Funds and keys
+
+- **Roundlot never holds your keys** and never asks for them. Agents sign their own payments.
+- **Roundlot never signs or sends a trade.** `plan_trade` returns unsigned transactions; only the `account` that signs them can send them.
+- **The only money Roundlot receives is the per-call fee**, paid to its pay-to address on X Layer testnet.
+
+## What a payment authorizes
+
+An x402 payment is an EIP-3009 authorization for **one transfer**: exactly the quoted amount of USD₮0, to Roundlot's pay-to address, within a 120-second window, with a nonce that can't be reused. It can't be replayed, raised or redirected, and it isn't an approval.
+
+<Hint type="success" title="Refused calls cost nothing.">
+The authorization is submitted only after the tool succeeds. If the tool refuses, it is never used and expires.
+</Hint>
+
+## What runs on the server
+
+- **The facilitator relayer** (`0x70E5…7156`) holds testnet OKB for gas. It only submits signed transfer authorizations.
+- **The Try it demo wallet** holds testnet USD₮0 and pays only Roundlot's own quote endpoint.
+- Both keys are testnet-only and live in the API's environment, not in the code.
+
+## What is recorded
+
+- **Logs:** one line per settlement (resource, amount, payer address, transaction, status), a start-up line and error messages. Roundlot's code writes no request logs and no IP addresses; the hosting platforms (Railway for the API, Vercel for the site) keep their own standard request logs.
+- **In memory only:** per-IP counters for the rate limit and Try it, and the last 25 settlements, which are public at `/v1/activity`, payer addresses included. All of it resets on every deploy.
+- **No accounts, API keys, cookies or analytics.**
+
+## Trust boundaries
+
+- Market data comes from X Layer mainnet contracts and OKX's public market data. Roundlot doesn't generate prices; it reads, converts and compares them, and every response names its block number.
+- Payments currently settle through Roundlot's own facilitator; see [Facilitators](/docs/facilitators).
+- Not investment advice.

@@ -1,0 +1,42 @@
+---
+title: "Endpoints"
+description: "Every HTTP route the Roundlot API serves, what it costs and what it returns."
+---
+
+Base URL: `https://api.roundlot.0xo.in`
+
+| Method | Path | Price | What it is |
+|---|---|---|---|
+| GET | `/` | free | A short index of the service's URLs |
+| GET | `/health` | free | Service status and which facilitator is running |
+| GET | `/health?deep=1` | free | Also checks OKX market data and the X Layer mainnet RPC from the server |
+| GET, POST | `/v1/catalog` | free | [catalog](/docs/catalog) |
+| GET, POST | `/v1/session` | $0.005 | [session](/docs/session) |
+| GET, POST | `/v1/quote` | $0.01 | [quote](/docs/quote) |
+| GET, POST | `/v1/plan-trade` | $0.02 | [plan_trade](/docs/plan-trade) |
+| POST | `/v1/try` | free to the caller | The landing page's [Try it](/docs/try-it); the demo wallet pays |
+| GET | `/v1/activity` | free | The last 25 settlements, newest first, with explorer links |
+| POST | `/mcp` | per tool | MCP over streamable HTTP, stateless. Other methods answer `405` |
+
+## Health
+
+```bash
+curl "https://api.roundlot.0xo.in/health?deep=1"
+```
+
+```json
+{
+  "ok": true,
+  "paymentNetwork": "eip155:1952",
+  "payments": { "state": "ready", "facilitator": "local", "settler": "0x70E55b031C9fB28f9E5E21f0cDd13ec9fDe77156" },
+  "upstreams": { "okx": { "ok": true, "host": "https://www.okx.com" }, "mainnetRpc": { "ok": true } }
+}
+```
+
+## Activity
+
+```bash
+curl https://api.roundlot.0xo.in/v1/activity
+```
+
+Each entry has `at`, `resource`, `amount`, `payer`, `transaction`, `status` and `explorer`. The feed lives in memory and resets when the API is redeployed; the explorer's page for Roundlot's [pay-to address](https://web3.okx.com/explorer/x-layer-testnet/address/0x5BeFc3f1C3703e12edaa316599cbB4b43cB4F2a3) is the permanent record.

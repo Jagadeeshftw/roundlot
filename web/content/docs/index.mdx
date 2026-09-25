@@ -1,18 +1,20 @@
 ---
 title: "Overview"
-description: "Roundlot sells market data and trade plans for tokenized US equities on X Layer, one paid call at a time."
-group: "Start"
-order: 1
+description: "Roundlot sells market data and trade plans for tokenized US equities on X Layer, one paid call at a time, to AI agents over MCP and REST."
 ---
 
-Roundlot is an MCP server and a REST API with the same four tools. Agents use it to price and plan trades in **NVDA, SPY and TSLA xStocks**, the tokenized equities on X Layer, without running their own indexing.
+Roundlot is an MCP server and a REST API with the same four tools. Agents use it to price and plan trades in **NVDA, SPY and TSLA xStocks**, the tokenized equities on X Layer, without running their own indexing or market-hours logic.
 
-| Tool | Price | Returns |
+| Tool | Price | What it returns |
 |---|---|---|
-| [`catalog`](/docs/catalog) | free | Supported symbols, addresses, venues, prices, networks |
-| [`session`](/docs/session) | $0.005 | US market session and what it means for the token's price |
-| [`quote`](/docs/quote) | $0.01 | The fill for a buy or sell against live Uniswap v3 liquidity |
-| [`plan_trade`](/docs/plan-trade) | $0.02 | Ordered, unsigned transactions to execute the trade |
+| [`catalog`](/docs/catalog) | free | Supported symbols, token and wrapper addresses, venues, parameters and prices |
+| [`session`](/docs/session) | $0.005 | Whether the US market is open and what that means for the token's price |
+| [`quote`](/docs/quote) | $0.01 | The fill for a buy or sell against live Uniswap v3 liquidity, compared with the OKX spot book |
+| [`plan_trade`](/docs/plan-trade) | $0.02 | Ordered, unsigned transactions that execute the trade |
+
+<Hint type="info" title="Testnet payments, mainnet data.">
+Payments settle on X Layer testnet in USD₮0, so trying Roundlot costs nothing real. Every price and every generated transaction is X Layer mainnet. Not investment advice.
+</Hint>
 
 ## Endpoints
 
@@ -20,10 +22,20 @@ Roundlot is an MCP server and a REST API with the same four tools. Agents use it
 - REST: `https://api.roundlot.0xo.in/v1/<tool>`, GET with query parameters or POST with a JSON body
 - Health: `https://api.roundlot.0xo.in/health`
 
-## Two networks
+The full list is in [Endpoints](/docs/endpoints).
 
-Data, token metadata, pool state and trade calldata come from **X Layer mainnet** (`eip155:196`). Payments settle on **X Layer testnet** (`eip155:1952`) in USD₮0, so anyone can try every tool with faucet funds. See [Networks](/docs/networks).
+## How paying works
+
+A paid call first answers with its price, as an x402 `PaymentRequired` object. The caller signs a USD₮0 transfer authorization and repeats the call; Roundlot verifies it, runs the tool and settles the payment only if the tool succeeds. The caller never needs gas. See [How x402 payments work](/docs/x402).
 
 ## What Roundlot never does
 
-It never holds keys or funds, never signs or sends a trade, and never charges for a call it refuses.
+- It never holds your keys or funds, and never signs or sends a trade: [`plan_trade`](/docs/plan-trade) returns unsigned transactions.
+- It never charges for a call it refuses.
+- It never uses mainnet money today: mainnet payments are configured and switched off.
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart): connect an MCP client and make a first call.
+- [Try it in the browser](/docs/try-it): watch one paid call happen without a wallet.
+- [Build an agent that trades xStocks](/docs/build-an-agent): the full flow, end to end.

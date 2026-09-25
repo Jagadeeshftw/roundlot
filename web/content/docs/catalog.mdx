@@ -1,41 +1,69 @@
 ---
 title: "catalog"
-description: "Supported symbols, token and wrapper addresses, venues, tool prices and networks."
-group: "Tools"
-order: 1
+description: "Free. The xStocks Roundlot covers, their token and wrapper addresses, venues, every tool's price and parameters, and the two networks."
 price: "Free"
 ---
 
 ## Parameters
 
-| Name | Type | Meaning |
+| Name | Type | Description |
 |---|---|---|
-| `symbol` | string, optional | Return one symbol: NVDA, SPY or TSLA (NVDAx and wNVDAx forms accepted). Default: all |
+| `symbol` | string, optional | Return one symbol: NVDA, SPY or TSLA (NVDAx and wNVDAx forms accepted). Default: all three |
 
 ## Request
 
+<Tabs>
+<Tab label="REST">
+
 ```bash
-curl -X POST https://api.roundlot.0xo.in/v1/catalog -H 'Content-Type: application/json' -d '{"symbol":"NVDA"}'
+curl -X POST https://api.roundlot.0xo.in/v1/catalog -H 'content-type: application/json' -d '{"symbol":"NVDA"}'
 ```
 
-## Response (trimmed)
+</Tab>
+<Tab label="MCP">
+
+```bash
+curl https://api.roundlot.0xo.in/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"catalog","arguments":{}}}'
+```
+
+</Tab>
+</Tabs>
+
+## Response
+
+Trimmed:
 
 ```json
 {
   "service": "Roundlot",
   "networks": {
     "data": { "network": "eip155:196", "name": "X Layer mainnet" },
-    "payment": { "network": "eip155:1952", "asset": { "symbol": "USD₮0", "decimals": 6 }, "facilitator": "local" }
+    "payment": { "network": "eip155:1952", "name": "X Layer testnet",
+      "asset": { "address": "0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c", "symbol": "USD₮0", "decimals": 6 },
+      "payTo": "0x5BeFc3f1C3703e12edaa316599cbB4b43cB4F2a3", "facilitator": "local", "status": "ready" }
   },
   "symbols": [{
-    "symbol": "NVDA",
+    "symbol": "NVDA", "underlying": "NVIDIA Corp.",
     "token": { "symbol": "NVDAx", "address": "0xc845b2894dbddd03858fd2d643b4ef725fe0849d", "decimals": 18 },
     "wrapped": { "symbol": "wNVDAx", "address": "0xa8ddb5cd96b5222afe198316e9a57caa642850d5", "decimals": 18 },
     "venue": { "dex": "Uniswap v3", "quote": "USDG", "feeBps": 5 },
     "reference": { "venue": "OKX spot", "instId": "XNVDA-USDT" }
   }],
-  "tools": [{ "name": "quote", "price": "$0.01", "rest": "/v1/quote" }]
+  "tools": [{
+    "name": "quote", "price": "$0.01", "asset": "USD₮0", "rest": "/v1/quote",
+    "params": [{ "name": "symbol", "type": "string", "required": true }, …],
+    "example": "GET https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250&sizeUnit=usd"
+  }, …],
+  "endpoints": { "mcp": "https://api.roundlot.0xo.in/mcp", "rest": "https://api.roundlot.0xo.in/v1" }
 }
 ```
 
-`facilitator` says who settles payments. The demo runs `local`: the facilitator from OKX's x402 SDK, run by Roundlot, with Roundlot's relayer paying the gas. `okx` would mean OKX's hosted facilitator.
+`networks.payment.facilitator` says who settles payments; see [Facilitators](/docs/facilitators).
+
+## Errors
+
+| Code | HTTP | When |
+|---|---|---|
+| `unknown_symbol` | 400 | The symbol isn't NVDA, SPY or TSLA |
+| `rate_limited` | 429 | More than 60 requests a minute from your IP |

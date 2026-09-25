@@ -1,30 +1,54 @@
 ---
 title: "Quickstart"
-description: "Connect an MCP client, read the free catalog, then pay for your first tool call."
-group: "Start"
-order: 2
+description: "Connect an MCP client, make a first free call, then fund a wallet with testnet USD₮0 for the paid tools."
 ---
 
 ## Connect an MCP client
 
-Add Roundlot as a streamable HTTP server:
+Roundlot speaks MCP over streamable HTTP at one URL: `https://api.roundlot.0xo.in/mcp`.
 
-```json
-{ "mcpServers": { "roundlot": { "type": "http", "url": "https://api.roundlot.0xo.in/mcp" } } }
+<Tabs>
+<Tab label="Claude Code">
+
+```bash
+claude mcp add --transport http roundlot https://api.roundlot.0xo.in/mcp
 ```
 
-`tools/list` returns `catalog`, `session`, `quote` and `plan_trade`. Only the last three cost anything.
+</Tab>
+<Tab label="Cursor">
 
-## Read the catalog (free)
+```json
+{ "mcpServers": { "roundlot": { "url": "https://api.roundlot.0xo.in/mcp" } } }
+```
+
+</Tab>
+<Tab label="Claude Desktop">
+
+In Claude Desktop, open **Settings → Connectors → Add custom connector**, name it Roundlot and paste `https://api.roundlot.0xo.in/mcp` as the URL.
+
+</Tab>
+</Tabs>
+
+`tools/list` returns `catalog`, `quote`, `session` and `plan_trade`. Only `catalog` is free.
+
+<Hint type="info" title="Most MCP clients can't pay yet.">
+Clients that can't sign x402 payments still work: a paid tool answers with its price and the REST alternative instead of data. To pay from an agent, use the [OKX Agentic Wallet](/docs/pay-agentic-wallet), the [OKX CLI](/docs/pay-okx-cli) or [your own code](/docs/pay-from-code).
+</Hint>
+
+## Make a first call (free)
 
 ```bash
 curl -X POST https://api.roundlot.0xo.in/v1/catalog
 curl "https://api.roundlot.0xo.in/v1/catalog?symbol=NVDA"
 ```
 
-## Get testnet USD₮0
+The catalog lists each tool's parameters and a working example request, so agents don't have to guess names.
 
-Open the [X Layer faucet](https://web3.okx.com/xlayer/faucet/xlayerfaucet), paste your wallet address and claim USDT. The faucet's USDT is USD₮0 at `0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c` (6 decimals). You don't need OKB: the facilitator pays the gas.
+## Fund a wallet for the paid tools
+
+1. Open the [X Layer faucet](https://web3.okx.com/xlayer/faucet/xlayerfaucet) and claim **USDT** on X Layer testnet to your address.
+2. The faucet's USDT is USD₮0 at `0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c` (6 decimals), the token Roundlot is paid in.
+3. You don't need OKB: the facilitator pays the gas.
 
 ## Pay for a call
 
@@ -32,7 +56,7 @@ The repository's demo agent connects over MCP and pays for `session`, `quote` an
 
 ```bash
 git clone https://github.com/Jagadeeshftw/roundlot && cd roundlot && npm ci
-DEMO_BUYER_PRIVATE_KEY=0x... BASE_URL=https://api.roundlot.0xo.in npm run demo -w service
+DEMO_BUYER_PRIVATE_KEY=0x... npm run demo -w service
 ```
 
-Each paid call prints its settlement transaction on the X Layer testnet explorer. To build your own client, see [x402 over MCP](/docs/paying-mcp) or [x402 over REST](/docs/paying-rest).
+Each paid call prints its settlement transaction on the X Layer testnet explorer. Add `-- --step` to pause before each step.

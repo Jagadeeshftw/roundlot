@@ -1,29 +1,50 @@
 ---
 title: "x402 over REST"
-description: "Paid REST routes answer 402 with payment requirements; retry with a signed payment header."
-group: "Paying"
-order: 1
+description: "A paid REST route answers 402 with a PAYMENT-REQUIRED header; retry with PAYMENT-SIGNATURE and read the receipt from PAYMENT-RESPONSE."
 ---
 
 REST routes are gated by OKX's `@okxweb3/app-x402-express` middleware (x402 version 2, `exact` scheme).
 
 ## The round trip
 
-1. Call the route without payment. It answers `402` with a base64 `PAYMENT-REQUIRED` header listing what to pay: amount, asset, network and `payTo`.
-2. Sign an EIP-3009 `TransferWithAuthorization` for that amount of USD₮0. The EIP-712 domain is name `USD₮0` (with the ₮ character), version `1`, chain id 1952.
-3. Retry the same request with the base64 payload in `PAYMENT-SIGNATURE`.
-4. The response carries the tool result, and `PAYMENT-RESPONSE` holds the settlement receipt with its transaction hash.
+1. Call the route without paying. It answers `402` with a base64 `PAYMENT-REQUIRED` header.
+2. Decode it, sign an EIP-3009 authorization for the amount, and base64-encode the signed payload.
+3. Repeat the same request with that payload in the `PAYMENT-SIGNATURE` header.
+4. The response carries the tool result, and `PAYMENT-RESPONSE` holds the base64 settlement receipt.
 
 ```bash
-curl -i "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=100"
-# HTTP/1.1 402 Payment Required
-# PAYMENT-REQUIRED: eyJ4NDAyVmVyc2lvbiI6Mi...
+curl -i "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250"
+# HTTP/2 402
+# payment-required: eyJ4NDAyVmVyc2lvbiI6Mi…
 ```
+
+The header decodes to:
+
+```json
+{
+  "x402Version": 2,
+  "error": "Payment required",
+  "resource": { "url": "https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250", "description": "Quote an xStock trade", "mimeType": "application/json" },
+  "accepts": [{
+    "scheme": "exact",
+    "network": "eip155:1952",
+    "amount": "10000",
+    "asset": "0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c",
+    "payTo": "0x5BeFc3f1C3703e12edaa316599cbB4b43cB4F2a3",
+    "maxTimeoutSeconds": 120,
+    "extra": { "name": "USD₮0", "version": "1" }
+  }]
+}
+```
+
+## GET or POST
+
+Every paid route accepts GET with query parameters or POST with a JSON body. The payment covers the exact request that was quoted, so repeat it unchanged.
+
+<Hint type="success" title="Validated before you pay.">
+A malformed request gets `400 invalid_input` with the problem fields, not a `402`, and settlement happens only after the tool returns `2xx`. A refused call is never charged.
+</Hint>
 
 ## Clients
 
-Any x402 v2 client that signs EIP-3009 works, for example `x402Client` with `ExactEvmScheme` from `@okxweb3/app-x402-core` and `@okxweb3/app-x402-evm`, backed by a plain viem account.
-
-## Refunds you never need
-
-Input is validated before payment is requested (a bad call gets `400`, not `402`), and settlement happens only after the tool returns `2xx`. A refused call is never charged.
+Any x402 v2 client that signs EIP-3009 works: [OKX's fetch wrapper](/docs/pay-from-code), the [OKX CLI](/docs/pay-okx-cli), or the [OKX Agentic Wallet](/docs/pay-agentic-wallet).

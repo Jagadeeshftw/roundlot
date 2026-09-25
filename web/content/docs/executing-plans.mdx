@@ -1,0 +1,42 @@
+---
+title: "Executing a plan safely"
+description: "What each step of a plan does, why the order matters, and how slippage limits, deadlines and approvals protect the account that signs."
+---
+
+## The steps, in order
+
+| Step | Contract | What it does |
+|---|---|---|
+| `approve` | the token being spent | Lets the next step spend exactly the amount it needs. Skipped when the allowance is already enough |
+| `wrap` | the ERC-4626 wrapper | `deposit`: turns raw xStock tokens into wrapped tokens. Only when selling the raw form |
+| `swap` | SwapRouter02 `0x4f0c28f5926afda16bf2506d5d9e57ea190f9bca` | `multicall(deadline, [exactInputSingle or exactOutputSingle])` against the wrapper's Uniswap v3 pool |
+| `unwrap` | the ERC-4626 wrapper | `redeem`: turns wrapped tokens into the raw xStock. Only when buying the raw form |
+
+Each step depends on the one before it, so send them one at a time and wait for each receipt before sending the next.
+
+## Slippage
+
+`maxSlippageBps` (default 50, at most 1000) sets the swap's limit:
+
+- **exact input** (buy in USD, sell in shares): `amountOutMinimum` is the quoted output less the slippage;
+- **exact output** (buy in shares, sell in USD): `amountInMaximum` is the quoted input plus the slippage.
+
+If the pool has moved further than that by the time the swap runs, the swap reverts and nothing is spent except gas.
+
+## Deadlines
+
+The swap is wrapped in `multicall(deadline, …)`, so it reverts after `deadlineSeconds` (default 600, from 60 to 3600). A plan past its deadline is stale: ask for a new one rather than sending it late.
+
+## Approvals
+
+Approvals are for the exact amount a step spends, never unlimited. Approvals the account already has are left out of the plan.
+
+## Before you sign
+
+<Hint type="warning" title="Check the targets.">
+Compare every `to` address with [Supported assets and contracts](/docs/assets), and simulate each step (for example viem's `call` or `estimateGas`) before sending.
+</Hint>
+
+- Read `warnings`: a low balance means the plan will revert as-is.
+- A multiplier change inside the deadline window makes `plan_trade` refuse with `multiplier_change_pending`; try again after it activates.
+- Buying the raw form with exact input unwraps the slippage floor; any fill above it stays as wrapped tokens in the account.

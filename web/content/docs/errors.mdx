@@ -1,25 +1,38 @@
 ---
 title: "Errors and limits"
-description: "Error codes, when you're charged, and rate limits."
-group: "Reference"
-order: 1
+description: "Every error code, when it happens, and whether you pay for it (you never do), plus the rate limits."
 ---
 
 ## Errors
 
-| Code | HTTP | Charged | Meaning |
+| Code | HTTP | Charged | When |
 |---|---|---|---|
-| `invalid_input` | 400 | no | A parameter is missing or malformed; payment is not requested |
-| `unknown_symbol` | 400 | no | Supported: NVDA, SPY, TSLA |
+| `invalid_input` | 400 | no | A parameter is missing or malformed; payment isn't requested |
+| `unknown_symbol` | 400 | no | The symbol isn't NVDA, SPY or TSLA |
 | `insufficient_liquidity` | 422 | no | The pool can't fill this size |
 | `token_paused` | 422 | no | The issuer has paused transfers |
-| `multiplier_change_pending` | 422 | no | plan_trade only: a multiplier change falls inside the deadline |
-| `payments_unavailable` | 503 | no | The facilitator is unreachable; free tools still work |
-| `rate_limited` | 429 | no | Too many requests from your IP |
+| `multiplier_change_pending` | 422 | no | `plan_trade` only: a multiplier change activates within the deadline plus 60 s |
+| `rate_limited` | 429 | no | More than 60 requests a minute from your IP |
+| `upstream_error` | 502 | no | X Layer RPC or OKX market data failed |
+| `payments_unavailable` | 503 | no | No facilitator is ready; the free catalog still works |
+| `try_it_limit` | 429 | no | Try it: more than 3 tries an hour from your IP |
+| `try_it_daily_cap` | 429 | no | Try it: 200 tries a day across everyone |
+| `demo_wallet_low` | 503 | no | Try it: the demo wallet holds under $1 |
+| `try_it_disabled` | 404 | no | Try it is switched off on the API |
 
-Over MCP the same codes arrive as `isError` results. Settlement only happens after a successful result.
+Over MCP the same codes arrive as `isError` tool results. Settlement only happens after a successful result, so **no error is ever charged**.
 
-## Limits
+## Rate limits
 
-- 60 requests per minute per IP across `/v1` and `/mcp`.
-- Market data is cached for about 2 seconds and token state for 30 seconds, so repeated calls within that window see the same numbers.
+- **60 requests per minute per IP**, across `/v1/*` and `/mcp` together (fixed one-minute window).
+- Every response carries `RateLimit-Limit` and `RateLimit-Remaining`; a `429` also carries `Retry-After` in seconds.
+- Request bodies are limited to 64 kB of JSON.
+
+## Payment limits
+
+- A signed payment is valid for 120 seconds (`maxTimeoutSeconds`).
+- Each payment covers one call; its nonce can't be reused.
+
+## Freshness
+
+Market data is cached briefly (OKX books and pool state 2 s, token state 30 s), so identical calls within that window return the same numbers. See [How prices are made](/docs/prices).

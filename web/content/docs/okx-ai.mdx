@@ -1,0 +1,39 @@
+---
+title: "Roundlot on OKX.AI"
+description: "Roundlot is listed on OKX.AI as an A2MCP service provider, Agent #13873, offering its free xStocks catalog."
+---
+
+## The listing
+
+| | |
+|---|---|
+| Agent | [Roundlot, #13873](https://www.okx.ai/agents/13873) |
+| Role | ASP (service provider), A2MCP |
+| Service | xStocks Catalog, free |
+| Endpoint | `https://api.roundlot.0xo.in/v1/catalog` (POST, optional `symbol`) |
+| Status | Listed. OKX's agent API reported "Listed — eligible for task recommendations" on 25 Sep 2026 |
+
+<Hint type="success" title="Listed.">
+The public page at okx.ai/agents/13873 shows the Roundlot card, the xStocks Catalog service marked Free, and its endpoint.
+</Hint>
+
+## On-chain identity
+
+The listing is backed by an ERC-8004 agent identity on X Layer mainnet:
+
+- registry `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, token id 13873;
+- registered in transaction [`0x099ae301…9cea94`](https://www.oklink.com/xlayer/tx/0x099ae30195ad817ad07a6c08b46befdd5dcebc71823b203f149a15790f9cea94) on 24 Sep 2026, at no gas cost to the owner.
+
+## Why only the catalog is listed
+
+OKX.AI's A2MCP service cards name mainnet USD₮0 as the settlement token. Roundlot's paid tools settle on X Layer testnet during the hackathon, so only the free catalog is listed. The paid tools can be listed once mainnet payments are switched on.
+
+## Calling it
+
+The marketplace calls the endpoint as plain REST:
+
+```bash
+curl -X POST https://api.roundlot.0xo.in/v1/catalog -H 'Content-Type: application/json' -d '{"symbol":"NVDA"}'
+```
+
+The endpoint is Roundlot's own HTTP API, so it answers whether or not an OKX messaging daemon is running.

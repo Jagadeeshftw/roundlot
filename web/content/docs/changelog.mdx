@@ -1,0 +1,29 @@
+---
+title: "Changelog"
+description: "What changed in Roundlot, by day, from the commit history."
+---
+
+## 25 Sep 2026
+
+- Docs rebuilt: GitBook-style layout, search (⌘K or Ctrl+K), and every feature documented.
+- Roundlot listed on OKX.AI as Agent #13873.
+
+## 24 Sep 2026
+
+- **Payments live in production** on X Layer testnet, settled by the self-hosted facilitator.
+- **Try it** switched on: the landing page pays for one real quote from the demo wallet.
+- **MCP HTTP 402 carrier**: paid MCP tool calls also work with OKX's `onchainos` CLI and Agent Payments skill.
+- The catalog lists each tool's parameters and a working example request.
+- Settlement receipts are polled every 500 ms.
+- The activity feed shows Try it payments under the public URL.
+- Agent #13873 registered on OKX.AI and submitted for review.
+- Recording helpers for the demo scripts, and a production check script.
+
+## 23 Sep 2026
+
+- First release: `catalog`, `session`, `quote` and `plan_trade` over REST and MCP, paid per call with x402.
+- Mainnet data layer: Backed xStock tokens, ERC-4626 wrappers, Uniswap v3 pools and QuoterV2, OKX spot books.
+- NYSE session calendar with holidays, early closes and DST.
+- `plan_trade` tested by executing plans on an anvil fork of X Layer mainnet.
+- Try it endpoint, demo agent, settlement activity feed and deep health check.
+- Landing page and docs; API at api.roundlot.0xo.in.

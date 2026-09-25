@@ -1,0 +1,41 @@
+---
+title: "Pay from code"
+description: "Pay Roundlot from TypeScript with OKX's x402 client and a viem account: wrap fetch once and every 402 is paid automatically."
+---
+
+## Install
+
+```bash
+npm install @okxweb3/app-x402-core@0.2.0 @okxweb3/app-x402-evm@0.2.0 @okxweb3/app-x402-fetch@0.1.2 viem
+```
+
+## Wrap fetch
+
+```ts
+import { x402Client } from "@okxweb3/app-x402-core/client";
+import { toClientEvmSigner } from "@okxweb3/app-x402-evm";
+import { ExactEvmScheme } from "@okxweb3/app-x402-evm/exact/client";
+import { wrapFetchWithPayment } from "@okxweb3/app-x402-fetch";
+import { createPublicClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+
+// A testnet-only key holding X Layer testnet USD₮0. No OKB needed.
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const publicClient = createPublicClient({ transport: http("https://testrpc.xlayer.tech") });
+
+const client = new x402Client().register(
+  "eip155:1952",
+  new ExactEvmScheme(toClientEvmSigner(account, publicClient)),
+);
+const fetchWithPayment = wrapFetchWithPayment(fetch, client);
+
+const res = await fetchWithPayment("https://api.roundlot.0xo.in/v1/quote?symbol=NVDA&side=buy&size=250");
+console.log(res.status, await res.json());
+console.log("receipt:", res.headers.get("PAYMENT-RESPONSE"));
+```
+
+The wrapper sends the request, and on `402` signs the payment and sends it again. Save it as `quote.mts` and run it with `PRIVATE_KEY=0x... npx tsx quote.mts`.
+
+<Hint type="info">
+The same client signs MCP payments: create the payload with `client.createPaymentPayload(paymentRequired)` and put it in `_meta["x402/payment"]`. The repository's `service/scripts/demo-agent.ts` does exactly that.
+</Hint>

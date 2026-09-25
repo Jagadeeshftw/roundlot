@@ -1,20 +1,24 @@
 ---
 title: "Networks"
-description: "Data from X Layer mainnet, payments on X Layer testnet: why, and what each response tells you."
-group: "Paying"
-order: 3
+description: "Data, prices and trade plans come from X Layer mainnet; payments settle on X Layer testnet. Why the split, and how to tell which is which."
 ---
 
 | What | Network | Details |
 |---|---|---|
-| Market data, token state, pool state, trade calldata | X Layer mainnet `eip155:196` | Uniswap v3, QuoterV2, SwapRouter02 |
-| x402 payments | X Layer testnet `eip155:1952` | USD₮0 `0x9e29…fb0c`, 6 decimals |
-| Reference prices | OKX spot | `XNVDA-USDT`, `XSPY-USDT`, `XTSLA-USDT` |
+| Market data, token state, pool state, trade calldata | X Layer mainnet, `eip155:196` | Uniswap v3 factory, QuoterV2, SwapRouter02; RPC `https://xlayerrpc.okx.com` with `https://rpc.xlayer.tech` as fallback |
+| x402 payments | X Layer testnet, `eip155:1952` | USD₮0 `0x9e29b3aada05bf2d2c827af80bd28dc0b9b4fb0c`, 6 decimals; RPC `https://testrpc.xlayer.tech` |
+| Reference prices | OKX spot | `XNVDA-USDT`, `XSPY-USDT`, `XTSLA-USDT` public order books |
 
 ## Why the split
 
-Real xStocks and real liquidity only exist on mainnet, so every read and every generated transaction points there. Payments settle on testnet so anyone can try the service with faucet funds. Mainnet payments (USD₮0 `0x779d…3736`) are configured and switched off.
+Real xStocks and real liquidity only exist on mainnet, so every read and every generated transaction points there. Payments settle on testnet so anyone can try every tool with faucet funds and nobody spends real money on a demo.
+
+## Mainnet payments
+
+Mainnet payments are configured and switched off. The asset would be USD₮0 on X Layer mainnet, `0x779ded0c9e1022225f8e0630b35a9b54be713736`. Turning them on is a configuration change (`PAYMENT_NETWORK=eip155:196`), not a code change.
 
 ## How to tell
 
-Every paid response includes `data.network: "eip155:196"`; every receipt names `eip155:1952`. The [catalog](/docs/catalog) lists both, plus which facilitator settles payments.
+- Every paid response carries `data.network: "eip155:196"`.
+- Every receipt names `eip155:1952`.
+- The [catalog](/docs/catalog) lists both under `networks`, including which facilitator settles payments.

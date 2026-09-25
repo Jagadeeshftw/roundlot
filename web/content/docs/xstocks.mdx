@@ -1,0 +1,41 @@
+---
+title: "xStocks explained"
+description: "Raw xStock tokens, their ERC-4626 wrappers, the corporate-action multiplier, and why Roundlot normalises every price to one share."
+---
+
+## Raw tokens and wrappers
+
+Each xStock exists twice on X Layer mainnet:
+
+| Symbol | Raw token (Backed) | ERC-4626 wrapper |
+|---|---|---|
+| NVDA | NVDAx `0xc845b2894dbddd03858fd2d643b4ef725fe0849d` | wNVDAx `0xa8ddb5cd96b5222afe198316e9a57caa642850d5` |
+| SPY | SPYx `0x90a2a4c76b5d8c0bc892a69ea28aa775a8f2dd48` | wSPYx `0xe7e553cd128f0011777323a0b44a7b96ea1cb540` |
+| TSLA | TSLAx `0x8ad3c73f833d3f9a523ab01476625f269aeb7cf0` | wTSLAx `0xc3fdbe3a68ee5de461d30415a8165cf9aefe1171` |
+
+One raw token is about one share of the underlying. Only the **wrappers** have usable Uniswap v3 liquidity on X Layer, so quotes route through the wrapper and trade plans add a wrap or unwrap step when you hold or want the raw token.
+
+## The multiplier
+
+Backed tokens carry a corporate-action multiplier (`multiplier()`, 1e18-scaled) that adjusts balances for events such as dividends. The wrapper holds raw tokens, so one wrapped token is worth `convertToAssets(1e18)` raw tokens, which is more than one share once the multiplier has grown.
+
+## Per-share normalisation
+
+Pool prices are per **wrapped** token. OKX's books are per **share**. Roundlot divides the pool price by the wrapper's rate before comparing the two.
+
+Measured on 23 Sep 2026 at 17:45 UTC for SPY:
+
+| | Value |
+|---|---|
+| Pool price per wrapped token | 772.00 USDG |
+| Shares per wrapped token | 1.005715 |
+| **Pool price per share** | **767.61 USDG** |
+| OKX mid (`XSPY-USDT`) | 768.72 |
+| Gap with normalisation | −14.5 bps |
+| Gap without it | +42.6 bps |
+
+Without the division, SPY would look about 40 bps more expensive on-chain than it is. NVDA's rate was 1.0017 and TSLA's 1.0000 at the same time.
+
+## Scheduled changes
+
+A multiplier change can be scheduled ahead (`newMultiplier`, `newMultiplierActivationTime`). [`session`](/docs/session) reports it, and [`plan_trade`](/docs/plan-trade) refuses to build a plan whose deadline window includes it.

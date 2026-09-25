@@ -1,0 +1,77 @@
+---
+title: "Build an agent that trades xStocks"
+description: "The whole flow in one script: check the session, quote the trade, get the plan, then sign and send it from the agent's own account."
+---
+
+This guide pays Roundlot from TypeScript with the client from [Pay from code](/docs/pay-from-code). The first three calls cost $0.035 of testnet USD₮0 in total.
+
+## 1. Set up a paying fetch
+
+```ts
+import { x402Client } from "@okxweb3/app-x402-core/client";
+import { toClientEvmSigner } from "@okxweb3/app-x402-evm";
+import { ExactEvmScheme } from "@okxweb3/app-x402-evm/exact/client";
+import { wrapFetchWithPayment } from "@okxweb3/app-x402-fetch";
+import { createPublicClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+
+const API = "https://api.roundlot.0xo.in";
+const payer = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const testnet = createPublicClient({ transport: http("https://testrpc.xlayer.tech") });
+const client = new x402Client().register("eip155:1952", new ExactEvmScheme(toClientEvmSigner(payer, testnet)));
+const pay = wrapFetchWithPayment(fetch, client);
+const get = async (path: string) => {
+  const res = await pay(`${API}${path}`);
+  if (!res.ok) throw new Error(`${path}: ${res.status} ${await res.text()}`);
+  return res.json();
+};
+```
+
+## 2. Is the market open? (`session`, $0.005)
+
+```ts
+const session = await get("/v1/session?symbol=NVDA");
+if (session.usEquityMarket.phase !== "regular" || !session.onchain.tradable) {
+  console.log("Not trading now:", session.usEquityMarket.reason, session.warnings);
+  process.exit(0);
+}
+```
+
+## 3. What would it cost? (`quote`, $0.01)
+
+```ts
+const quote = await get("/v1/quote?symbol=NVDA&side=buy&size=250");
+console.log(`${quote.fill.receive.shares} shares at ${quote.fill.avgPricePerShare}, impact ${quote.fill.priceImpactBps} bps`);
+if (quote.fill.priceImpactBps > 30) process.exit(0); // your own limit
+```
+
+## 4. Get the plan (`plan_trade`, $0.02)
+
+```ts
+const trader = "0xYourTradingAccount";
+const plan = await get(`/v1/plan-trade?symbol=NVDA&side=buy&size=250&maxSlippageBps=50&account=${trader}`);
+for (const step of plan.steps) console.log(step.index, step.kind, step.description);
+```
+
+## 5. Sign and send
+
+The plan is X Layer **mainnet** transactions for `trader`. Send them in order and wait for each receipt; see [Executing a plan safely](/docs/executing-plans).
+
+```ts
+import { createWalletClient } from "viem";
+import { xLayer } from "viem/chains";
+
+const wallet = createWalletClient({ account: privateKeyToAccount(process.env.TRADER_KEY as `0x${string}`), chain: xLayer, transport: http() });
+const mainnet = createPublicClient({ chain: xLayer, transport: http() });
+for (const step of plan.steps) {
+  const hash = await wallet.sendTransaction({ to: step.to, data: step.data, value: 0n });
+  const receipt = await mainnet.waitForTransactionReceipt({ hash });
+  if (receipt.status !== "success") throw new Error(`step ${step.index} (${step.kind}) reverted: ${hash}`);
+}
+```
+
+<Hint type="danger" title="Real funds.">
+Step 5 spends the trading account's mainnet USDG. Every plan shape is executed on an anvil fork of X Layer mainnet in Roundlot's tests (`npm run test:fork -w service`); run your agent against a fork first too.
+</Hint>
+
+The repository's `service/scripts/demo-agent.ts` runs steps 1–4 over MCP instead of REST.

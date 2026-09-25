@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
 import { Container } from "./container";
 import Link from "next/link";
@@ -23,6 +24,8 @@ const items = [
 ];
 
 export const Navbar = () => {
+  // Docs pages have their own header (search, docs navigation).
+  if (usePathname()?.startsWith("/docs")) return null;
   return (
     <Container as="nav" className="">
       <FloatingNav items={items} />
